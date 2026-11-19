@@ -1,0 +1,409 @@
+@import 'tailwindcss';
+@import '@fontsource/newsreader/500.css';
+@import '@fontsource-variable/dm-sans';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Ordo design tokens.
+ * Source of truth: the Doxa "White Paper on a Butter Desk" system (DESIGN.md).
+ * White paper for work, a pale butter desk for chrome, one amber accent used as a fill.
+ * Amber is never small text: text that carries the accent is ochre (--primary-text).
+ * Text on amber is charcoal, never white. Light or dark; there is no system option.
+ */
+:root {
+  /* Surfaces */
+  --background: #ffffff; /* paper */
+  --card: #ffffff;
+  --popover: #ffffff;
+  --surface: #fcfaf3; /* desk: sidebar, drawer/dialog chrome, page wash */
+  --secondary: #f8f4e4; /* sand: hover, disabled, skeletons */
+  --muted: #f8f4e4;
+
+  /* Text hierarchy */
+  --ink: #4d4a4d; /* body */
+  --foreground: #353335; /* ink-strong: headings, labels */
+  --muted-foreground: #6b6b6b; /* meta, column headers */
+
+  /* Borders */
+  --border: #ece5cc; /* hairline: every divider */
+  --border-strong: #dccfa6; /* outline buttons, menus */
+  --input: #8a7f6e; /* field outlines (3:1) */
+
+  /* Brand: one amber voice */
+  --primary: #e8b923;
+  --primary-hover: #d4a615;
+  --primary-foreground: #353335;
+  --primary-text: #826400; /* ochre: the only accent allowed as text, and the focus colour */
+  --primary-soft: #faf4df; /* selected row, current nav, soft badge */
+  --ring: #826400;
+
+  /* Semantic status */
+  --success: #146c43;
+  --success-soft: #e6f4ec;
+  --warning: #8a5a00;
+  --warning-soft: #fdf3e0;
+  --info: #1f5f9e;
+  --info-soft: #ebf3fb;
+  --destructive: #b3261e;
+  --destructive-soft: #fdeceb;
+
+  /* Shape */
+  --radius: 0.5rem; /* inputs 8px */
+
+  /* Elevation: flat at rest. Shadows belong to what leaves the page plane. */
+  --shadow-drawer: -12px 0 40px -12px #1b1a1a33;
+  --shadow-raised: 0 2px 4px -1px #1b1a1a14, 0 16px 40px -12px #1b1a1a33;
+  --shadow-menu: 0 1px 2px #1b1a1a14, 0 8px 24px -6px #1b1a1a29;
+  --scrim: rgb(0 0 0 / 0.4);
+  --device: #353335; /* bezel of the product preview: a picture of a device, same in both themes */
+
+  /* Layout */
+  --sidebar-width: 15rem;
+  --header-height: 3.5rem;
+
+  color-scheme: light;
+}
+
+.dark {
+  --background: #141312;
+  --card: #1c1b19;
+  --popover: #1c1b19;
+  --surface: #181716;
+  --secondary: #262420;
+  --muted: #262420;
+
+  --ink: #e6e2da;
+  --foreground: #faf8f2;
+  --muted-foreground: #a8a399;
+
+  --border: #2e2b26;
+  --border-strong: #433e35;
+  --input: #7d7569;
+
+  --primary: #e8b923;
+  --primary-hover: #f0c94a;
+  --primary-foreground: #353335;
+  --primary-text: #f0c94a;
+  --primary-soft: #2a2410;
+  --ring: #f0c94a;
+
+  --success: #5fc08a;
+  --success-soft: #12261b;
+  --warning: #e5b04a;
+  --warning-soft: #2b2112;
+  --info: #7db4e8;
+  --info-soft: #12212f;
+  --destructive: #f2827a;
+  --destructive-soft: #2e1816;
+
+  --shadow-drawer: -12px 0 40px -12px #00000099;
+  --shadow-raised: 0 2px 4px -1px #00000066, 0 16px 40px -12px #000000aa;
+  --shadow-menu: 0 1px 2px #00000066, 0 8px 24px -6px #00000099;
+  --scrim: rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-card: var(--card);
+  --color-popover: var(--popover);
+  --color-surface: var(--surface);
+  --color-secondary: var(--secondary);
+  --color-sand: var(--secondary);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-text: var(--primary-text);
+  --color-primary-soft: var(--primary-soft);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+
+  --font-sans: 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Newsreader', Georgia, serif;
+
+  /* Fixed type scale: 12, 13, 14, 15, 16 and 28. No fluid clamp(). */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.333;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.4;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.43;
+  --text-title: 0.9375rem;
+  --text-title--line-height: 1.375;
+  --text-headline: 1.75rem;
+  --text-headline--line-height: 1.25;
+
+  --radius-input: 0.5rem;
+  --radius-menu: 0.75rem;
+  --radius-card: 1.25rem;
+
+  --shadow-drawer: var(--shadow-drawer);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-menu: var(--shadow-menu);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-drawer-in: drawer-in 220ms var(--ease-out-expo);
+  --animate-drawer-out: drawer-out 180ms var(--ease-out-expo) forwards;
+  --animate-drawer-left-in: drawer-left-in 220ms var(--ease-out-expo);
+  --animate-drawer-left-out: drawer-left-out 180ms var(--ease-out-expo) forwards;
+  --animate-dialog-in: dialog-in 180ms var(--ease-out-expo);
+  --animate-dialog-out: dialog-out 120ms ease-in forwards;
+  --animate-fade-in: fade-in 180ms ease-out;
+  --animate-fade-out: fade-out 150ms ease-in forwards;
+  --animate-menu-in: menu-in 140ms var(--ease-out-expo);
+  --animate-toast-in: toast-in 220ms var(--ease-out-expo);
+  --animate-toast-out: fade-out 150ms ease-in forwards;
+  --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawer-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes drawer-left-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawer-left-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Reduced motion keeps the meaning (state change) and drops the travel. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.43;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Browser surfaces carry the design too. */
+  ::selection {
+    background: var(--primary-soft);
+    color: var(--primary-text);
+  }
+  input,
+  textarea {
+    caret-color: var(--primary-text);
+  }
+  :focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--ring) 40%, transparent);
+    outline-offset: 2px;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 9999px;
+    border: 2px solid var(--background);
+  }
+
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Native select: one chevron, no browser arrow. */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+  }
+  .dark select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8a399' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+}
+
+/* One Heading Rule: every h1/h2 and .font-display is Newsreader 500, whatever weight a page adds.
+   Unlayered so it beats the utility layer. */
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  text-wrap: balance;
+}
+h1.font-sans,
+h2.font-sans {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: normal;
+}
+/* DM Sans has no heavier voice here: bold and extra-bold both resolve to 600. */
+.font-bold:not(h1, h2, .font-display),
+.font-extrabold:not(h1, h2, .font-display) {
+  font-weight: 600;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+/* The one deep shadow belongs to the picture of a device. */
+.device-shadow {
+  box-shadow:
+    0 2px 4px -1px #1b1a1a14,
+    0 40px 80px -24px #1b1a1a40;
+}
+.dark .device-shadow {
+  box-shadow:
+    0 2px 4px -1px #00000066,
+    0 40px 80px -24px #000000b3;
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
