@@ -17,16 +17,8 @@ import {
   type RoadmapFields,
 } from '@/storage'
 import { usePlanningStore } from '@/store/planning-store'
-import { useUndoStore } from '@/store/undo-store'
-import {
-  datesForLane,
-  isDated,
-  placeEntry,
-  rowKey,
-  type Drop,
-  type ItemType,
-  type RoadmapRow,
-} from './engine'
+import { useUndoStore, type UndoOp } from '@/store/undo-store'
+import { planMove, type Drop, type ItemType, type RoadmapRow } from './engine'
 import { today } from './dates'
 
 /**
@@ -56,17 +48,42 @@ export async function attempt<T>(work: () => Promise<T>): Promise<T | undefined>
   }
 }
 
+/** Carry out saved undo steps. They are data, so this also works for history that survived a reload. */
+async function runOps(ops: UndoOp[]) {
+  const storage = getStorage()
+  for (const op of ops) {
+    switch (op.t) {
+      case 'patch':
+        await writeItem(op.kind, op.id, op.before as ItemPatch)
+        break
+      case 'entries':
+        await writeEntries(op.roadmapId, op.entries as RoadmapEntry[])
+        break
+      case 'dep-delete':
+        await storage.planning.deleteDependency(productId(), op.id)
+        break
+      case 'dep-create':
+        await storage.planning.saveDependency(productId(), op.fields)
+        break
+      case 'roadmap-restore':
+        await storage.roadmapService.restore(productId(), op.id)
+        break
+      case 'milestone-restore':
+        await storage.milestones.restore(op.id)
+        break
+    }
+  }
+  await planningState().commit()
+}
+
 /** Record an undo and tell the user, with the button right there. */
-function recordUndo(label: string, undo: () => Promise<void>, announce = true) {
-  const entry = useUndoStore.getState().push(label, async () => {
-    await undo()
-    await planningState().commit()
-  })
+function recordUndo(label: string, ops: UndoOp[], announce = true) {
+  const entry = useUndoStore.getState().push(label, ops)
   if (announce) {
     toast.success(label, undefined, {
       label: 'Undo',
       onClick: () =>
-        void attempt(() => useUndoStore.getState().undoEntry(entry.id)).then(
+        void attempt(() => useUndoStore.getState().undoEntry(entry.id, runOps)).then(
           (ok) =>
             ok === false &&
             toast.info('Too late to undo that', 'Something else has changed since.'),
@@ -77,7 +94,7 @@ function recordUndo(label: string, undo: () => Promise<void>, announce = true) {
 
 /** Undo the latest change (the toolbar button and Ctrl or Cmd Z). */
 export async function undoLatest() {
-  const label = await attempt(() => useUndoStore.getState().undoLast())
+  const label = await attempt(() => useUndoStore.getState().undoLast(runOps))
   if (label) toast.info('Undone', label)
   else if (label === undefined && useUndoStore.getState().stack.length === 0)
     toast.info('Nothing to undo')
@@ -94,30 +111,33 @@ async function writeItem(kind: ItemType, id: string, patch: ItemPatch) {
   else await planning.patchFeature(productId(), id, patch as Partial<Feature>)
 }
 
-/** Only the fields that would really change: dropping a card back in its own column changes nothing. */
-const pruneUnchanged = (item: object, patch: ItemPatch): ItemPatch =>
-  Object.fromEntries(
-    Object.entries(patch).filter(([k, v]) => (item as Record<string, unknown>)[k] !== v),
-  ) as ItemPatch
-
 const snapshot = (item: object, keys: string[]): ItemPatch =>
   Object.fromEntries(keys.map((k) => [k, (item as Record<string, unknown>)[k]])) as ItemPatch
 
-/** Change fields of an initiative or feature (quick edit, board drop, date drag). Undoable. */
-export async function updateItem(
-  row: RoadmapRow,
+/** Change fields of an initiative or feature wherever it is shown (a card, a bar, the matrix). Undoable. */
+export async function updateWork(
+  kind: ItemType,
+  item: object & { id: string },
   patch: ItemPatch,
   label: string,
   options: { announce?: boolean } = {},
 ) {
-  const before = snapshot(row.item, Object.keys(patch))
+  const before = snapshot(item, Object.keys(patch))
   return attempt(async () => {
-    await writeItem(row.kind, row.item.id, patch)
+    await writeItem(kind, item.id, patch)
     await planningState().commit()
-    recordUndo(label, () => writeItem(row.kind, row.item.id, before), options.announce ?? true)
+    recordUndo(label, [{ t: 'patch', kind, id: item.id, before }], options.announce ?? true)
     return true
   })
 }
+
+/** Change fields of the item behind a roadmap row (quick edit, board drop, date drag). Undoable. */
+export const updateItem = (
+  row: RoadmapRow,
+  patch: ItemPatch,
+  label: string,
+  options: { announce?: boolean } = {},
+) => updateWork(row.kind, row.item, patch, label, options)
 
 // ── Placement ───────────────────────────────────────────────────────────────
 
@@ -147,46 +167,35 @@ export interface MoveOptions {
 export async function moveRow(o: MoveOptions) {
   const roadmap = roadmapOf(o.roadmapId)
   const entriesBefore = roadmap.entries
-  const patch: ItemPatch = pruneUnchanged(o.row.item, o.itemPatch ?? {})
-  const entryPatch: Partial<RoadmapEntry> = {}
-  if (o.lane !== undefined) {
-    entryPatch.lane = o.lane ?? undefined
-    if (o.mode === 'dates' && o.lane && isDated(o.row.item)) {
-      const range = datesForLane(o.lane, o.row.item, today())
-      patch.startDate = range.start
-      patch.endDate = range.end
-    }
-  }
-  const entries =
-    o.reorder === false
-      ? entriesBefore.map((e) =>
-          rowKey(e.itemType, e.itemId) === o.row.key ? { ...e, ...entryPatch } : e,
-        )
-      : placeEntry(
-          entriesBefore,
-          o.row.key,
-          o.drop?.anchorKey,
-          o.drop?.place ?? 'after',
-          entryPatch,
-        )
-  const unchanged =
-    JSON.stringify(entries) === JSON.stringify(entriesBefore) && Object.keys(patch).length === 0
-  if (unchanged) return true
+  const plan = planMove({
+    entries: entriesBefore,
+    row: o.row,
+    drop: o.drop,
+    lane: o.lane,
+    itemPatch: o.itemPatch,
+    reorder: o.reorder,
+    mode: o.mode,
+    today: today(),
+  })
+  if (plan.unchanged) return true
+  const patch = plan.itemPatch as ItemPatch
   const before = snapshot(o.row.item, Object.keys(patch))
 
   return attempt(async () => {
     if (Object.keys(patch).length > 0) await writeItem(o.row.kind, o.row.item.id, patch)
     try {
-      await writeEntries(o.roadmapId, entries)
+      await writeEntries(o.roadmapId, plan.entries)
     } catch (e) {
       if (Object.keys(patch).length > 0) await writeItem(o.row.kind, o.row.item.id, before) // do not leave half a move behind
       throw e
     }
     await planningState().commit()
-    recordUndo(o.label, async () => {
-      await writeEntries(o.roadmapId, entriesBefore)
-      if (Object.keys(patch).length > 0) await writeItem(o.row.kind, o.row.item.id, before)
-    })
+    recordUndo(o.label, [
+      { t: 'entries', roadmapId: o.roadmapId, entries: entriesBefore },
+      ...(Object.keys(patch).length > 0
+        ? [{ t: 'patch' as const, kind: o.row.kind, id: o.row.item.id, before }]
+        : []),
+    ])
     return true
   })
 }
@@ -199,7 +208,9 @@ export async function addItems(roadmapId: string, items: NewEntry[]) {
     await getStorage().roadmapService.addItems(productId(), roadmapId, items)
     await planningState().commit()
     const n = items.length
-    recordUndo(`Added ${n} ${n === 1 ? 'item' : 'items'}`, () => writeEntries(roadmapId, before))
+    recordUndo(`Added ${n} ${n === 1 ? 'item' : 'items'}`, [
+      { t: 'entries', roadmapId, entries: before },
+    ])
     return true
   })
 }
@@ -211,9 +222,9 @@ export async function removeRow(roadmapId: string, row: RoadmapRow) {
       { itemType: row.kind, itemId: row.item.id },
     ])
     await planningState().commit()
-    recordUndo(`Removed “${row.item.title}” from the roadmap`, () =>
-      writeEntries(roadmapId, before),
-    )
+    recordUndo(`Removed “${row.item.title}” from the roadmap`, [
+      { t: 'entries', roadmapId, entries: before },
+    ])
     return true
   })
 }
@@ -241,10 +252,7 @@ export async function deleteRoadmap(id: string) {
   return attempt(async () => {
     await getStorage().roadmapService.delete(productId(), id)
     await planningState().commit()
-    recordUndo(
-      `Deleted roadmap “${name}”`,
-      async () => void (await getStorage().roadmapService.restore(productId(), id)),
-    )
+    recordUndo(`Deleted roadmap “${name}”`, [{ t: 'roadmap-restore', id }])
     return true
   })
 }
@@ -274,11 +282,7 @@ export async function deleteMilestone(id: string) {
   return attempt(async () => {
     await getStorage().planning.deleteMilestone(productId(), id)
     await planningState().commit()
-    if (m)
-      recordUndo(
-        `Deleted milestone “${m.title}”`,
-        async () => void (await getStorage().milestones.restore(id)),
-      )
+    if (m) recordUndo(`Deleted milestone “${m.title}”`, [{ t: 'milestone-restore', id }])
     return true
   })
 }
@@ -287,11 +291,7 @@ export async function addDependency(fields: DependencyFields) {
   return attempt(async () => {
     const saved = await getStorage().planning.saveDependency(productId(), fields)
     await planningState().commit()
-    recordUndo(
-      'Added a link',
-      async () => getStorage().planning.deleteDependency(productId(), saved.id),
-      false,
-    )
+    recordUndo('Added a link', [{ t: 'dep-delete', id: saved.id }], false)
     return saved
   })
 }
@@ -308,10 +308,7 @@ export async function removeDependency(dep: Dependency) {
       kind: dep.kind,
       note: dep.note,
     }
-    recordUndo(
-      'Removed a link',
-      async () => void (await getStorage().planning.saveDependency(productId(), rest)),
-    )
+    recordUndo('Removed a link', [{ t: 'dep-create', fields: rest }])
     return true
   })
 }

@@ -55,14 +55,14 @@ const initiatives = [
     owner: 'Sam',
     tagIds: ['t1'],
     order: 1,
-    scoring: { impact: 5, effort: 3 },
+    scoring: { impact: 'high', effort: 'medium' },
   }),
   ini('i2', 'Billing', {
     objectiveId: 'o2',
     status: 'planned',
     priority: 'critical',
     order: 2,
-    scoring: { impact: 4, effort: 5 },
+    scoring: { impact: 'medium', effort: 'high' },
   }),
   ini('i3', 'Cleanup', { status: 'idea', order: 3 }),
 ]

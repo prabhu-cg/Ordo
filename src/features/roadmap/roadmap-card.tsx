@@ -1,4 +1,10 @@
 import { MoreHorizontal } from 'lucide-react'
+import {
+  ConfidenceBadge,
+  DependencyBadge,
+  LevelBadge,
+  PriorityBadge,
+} from '@/components/domain/indicators'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,19 +22,12 @@ import {
   PRIORITIES,
   WORK_STATUSES,
   type Feature,
-  type Initiative,
   type Lane,
   type Priority,
   type WorkStatus,
 } from '@/domain'
 import { formatDate } from '@/lib/format'
-import {
-  LANE_LABELS,
-  PRIORITY_BADGE,
-  PRIORITY_LABELS,
-  STATUS_BADGE,
-  STATUS_LABELS,
-} from '@/lib/labels'
+import { LANE_LABELS, PRIORITY_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import type { RoadmapRow } from './engine'
 
@@ -50,6 +49,8 @@ interface CardProps {
   objectiveTitle?: string
   tagNames?: string[]
   hideStatus?: boolean
+  /** What this item is linked to, for the dependency badge. */
+  links?: Parameters<typeof DependencyBadge>[0]['links']
   lane?: Lane
   quick?: QuickHandlers
   /** Spread on the area that picks the card up. */
@@ -69,6 +70,7 @@ export function RoadmapCard({
   objectiveTitle,
   tagNames,
   hideStatus,
+  links,
   lane,
   quick,
   handleProps,
@@ -76,9 +78,7 @@ export function RoadmapCard({
   overlay,
 }: CardProps) {
   const item = row.item
-  const initiative = row.kind === 'initiative' ? (item as Initiative) : undefined
   const feature = row.kind === 'feature' ? (item as Feature) : undefined
-  const confidence = initiative?.scoring?.confidence
   const dates =
     item.startDate && item.endDate
       ? `${formatDate(item.startDate)} to ${formatDate(item.endDate)}`
@@ -131,28 +131,17 @@ export function RoadmapCard({
           {!hideStatus && (
             <Badge variant={STATUS_BADGE[item.status]}>{STATUS_LABELS[item.status]}</Badge>
           )}
-          {fields.has('priority') && item.priority && (
-            <Badge variant={PRIORITY_BADGE[item.priority]}>{PRIORITY_LABELS[item.priority]}</Badge>
+          {fields.has('priority') && item.priority && <PriorityBadge priority={item.priority} />}
+          {fields.has('confidence') && item.confidence && (
+            <ConfidenceBadge confidence={item.confidence} focusable={false} />
           )}
-          {fields.has('confidence') && confidence !== undefined && (
-            <Badge
-              variant="outline"
-              className="tabular-nums"
-              title="How sure you are this will have the expected impact"
-            >
-              Confidence {confidence}/5
-            </Badge>
+          {fields.has('impact') && item.scoring?.impact && (
+            <LevelBadge kind="Impact" level={item.scoring.impact} />
           )}
-          {fields.has('impact') && item.scoring?.impact !== undefined && (
-            <Badge variant="outline" className="tabular-nums">
-              Impact {item.scoring.impact}/5
-            </Badge>
+          {fields.has('effort') && item.scoring?.effort && (
+            <LevelBadge kind="Effort" level={item.scoring.effort} />
           )}
-          {fields.has('effort') && item.scoring?.effort !== undefined && (
-            <Badge variant="outline" className="tabular-nums">
-              Effort {item.scoring.effort}/5
-            </Badge>
-          )}
+          {fields.has('dependencies') && <DependencyBadge links={links} focusable={false} />}
         </span>
         {meta.length > 0 && (
           <span className="mt-2 block truncate text-caption text-muted-foreground">

@@ -2,6 +2,8 @@ import {
   Boxes,
   HardDrive,
   Home,
+  Grid2x2,
+  LayoutTemplate,
   Layers,
   Map as MapIcon,
   ListChecks,
@@ -32,10 +34,12 @@ const PLAN: NavItem[] = [
   { to: '/app/workspace/objectives', label: 'Objectives', icon: Target, count: 'objectives' },
   { to: '/app/workspace/initiatives', label: 'Initiatives', icon: Boxes, count: 'initiatives' },
   { to: '/app/workspace/features', label: 'Features', icon: ListChecks, count: 'features' },
+  { to: '/app/workspace/prioritise', label: 'Prioritise', icon: Grid2x2 },
   { to: '/app/roadmaps', label: 'Roadmaps', icon: MapIcon, count: 'roadmaps' },
 ]
 const LEARN: NavItem[] = [
   { to: '/app/onboarding', label: 'Guide', icon: Sparkles },
+  { to: '/app/templates', label: 'Templates', icon: LayoutTemplate },
   { to: '/app/example', label: 'Example roadmap', icon: Presentation },
 ]
 const SYSTEM: NavItem[] = [

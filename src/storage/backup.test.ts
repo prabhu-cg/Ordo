@@ -32,7 +32,7 @@ describe('backup', () => {
     await seed()
     const backup = await s.exportBackup()
     expect(backup.app).toBe('ordo')
-    expect(backup.schemaVersion).toBe(1)
+    expect(backup.schemaVersion).toBe(2)
     const counts = countBackup(parseBackup(serializeBackup(backup)))
     expect(counts).toMatchObject({
       products: 1,
@@ -74,6 +74,29 @@ describe('backup', () => {
   })
 })
 
+describe('backups made by earlier versions', () => {
+  it('a version 1 backup is upgraded on restore: scores become words and templates start empty', async () => {
+    await seed()
+    const current = JSON.parse(serializeBackup(await s.exportBackup()))
+    // Rewrite it the way version 1 would have written it.
+    current.schemaVersion = 1
+    delete current.data.templates
+    current.data.initiatives[0].scoring = { impact: 5, effort: 2, confidence: 4 }
+    delete current.data.initiatives[0].confidence
+    const restored = parseBackup(JSON.stringify(current))
+    expect(restored.schemaVersion).toBe(2)
+    expect(restored.data.templates).toEqual([])
+    expect(restored.data.initiatives[0]).toMatchObject({
+      scoring: { impact: 'high', effort: 'low' },
+      confidence: 'committed',
+    })
+    const other = await freshStorage()
+    await other.restoreBackup(restored)
+    expect((await other.initiatives.list())[0]?.confidence).toBe('committed')
+    await other.destroy()
+  })
+})
+
 describe('parseBackup rejects untrusted input', () => {
   const good = async () => {
     await seed()
@@ -104,6 +127,22 @@ describe('parseBackup rejects untrusted input', () => {
     const b = await good()
     b.data.features[0].initiativeId = 'ghost'
     expect(() => parseBackup(JSON.stringify(b))).toThrow(/inconsistent/)
+  })
+
+  it('rejects a dependency that links to a missing item', async () => {
+    const b = await good()
+    b.data.dependencies.push({
+      id: 'd',
+      productId: b.data.products[0].id,
+      fromType: 'initiative',
+      fromId: b.data.initiatives[0].id,
+      toType: 'feature',
+      toId: 'ghost',
+      kind: 'blocks',
+      createdAt: b.data.products[0].createdAt,
+      updatedAt: b.data.products[0].createdAt,
+    })
+    expect(() => parseBackup(JSON.stringify(b))).toThrow(/dependency links to a missing/)
   })
 
   it('rejects duplicate ids', async () => {

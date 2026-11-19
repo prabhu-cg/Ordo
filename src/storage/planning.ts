@@ -63,6 +63,8 @@ const ITEM_KEYS = [
   'status',
   'scoring',
   'priority',
+  'confidence',
+  'matrixOverride',
   'owner',
   'tagIds',
   'startDate',

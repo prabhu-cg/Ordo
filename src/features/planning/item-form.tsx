@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { Info, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,15 +11,27 @@ import {
 import { Field } from '@/components/ui/field'
 import { Input, Select, Textarea } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
+import { ConfidenceKey } from '@/components/domain/indicators'
+import { Tooltip } from '@/components/ui/tooltip'
 import {
+  CONFIDENCE_LEVELS,
+  LEVELS,
   PRIORITIES,
   WORK_STATUSES,
+  type Confidence,
   type Feature,
   type Initiative,
+  type Level,
   type Priority,
   type WorkStatus,
 } from '@/domain'
-import { PRIORITY_LABELS, STATUS_LABELS } from '@/lib/labels'
+import {
+  CONFIDENCE_HELP,
+  CONFIDENCE_LABELS,
+  LEVEL_LABELS,
+  PRIORITY_LABELS,
+  STATUS_LABELS,
+} from '@/lib/labels'
 import { toStorageError } from '@/storage'
 import { useItemDrawer, type DrawerTarget } from '@/store/drawer-store'
 import { usePlanningStore } from '@/store/planning-store'
@@ -27,34 +39,27 @@ import { TagPicker } from './tag-picker'
 
 type Kind = 'initiative' | 'feature'
 
-const SCORE_HINTS = {
-  impact: ['Low', 'High'],
-  confidence: ['Low', 'High'],
-  effort: ['Small', 'Large'],
-} as const
-
-function ScoreSelect({
+function LevelSelect({
   label,
-  kind,
+  hint,
   value,
   onChange,
   error,
 }: {
   label: string
-  kind: keyof typeof SCORE_HINTS
+  hint?: string
   value: string
   onChange: (v: string) => void
   error?: string
 }) {
-  const [low, high] = SCORE_HINTS[kind]
   return (
-    <Field label={label} error={error}>
+    <Field label={label} error={error} hint={hint}>
       {(c) => (
         <Select {...c} value={value} onChange={(e) => onChange(e.target.value)}>
           <option value="">Not set</option>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={n}>
-              {n === 1 ? `1, ${low.toLowerCase()}` : n === 5 ? `5, ${high.toLowerCase()}` : n}
+          {LEVELS.map((l) => (
+            <option key={l} value={l}>
+              {LEVEL_LABELS[l]}
             </option>
           ))}
         </Select>
@@ -64,7 +69,6 @@ function ScoreSelect({
 }
 
 const optional = (s: string) => (s.trim() === '' ? undefined : s)
-const score = (s: string) => (s === '' ? undefined : Number(s))
 
 /**
  * The form for an initiative or a feature. They share almost every field: a feature estimates impact and
@@ -102,9 +106,9 @@ export function ItemForm({ kind, target }: { kind: Kind; target: DrawerTarget })
       '',
     status: (existing?.status ?? 'idea') as WorkStatus,
     priority: (existing?.priority ?? '') as Priority | '',
-    impact: String(existing?.scoring?.impact ?? ''),
-    confidence: String(existing?.scoring?.confidence ?? ''),
-    effort: String(existing?.scoring?.effort ?? ''),
+    impact: (existing?.scoring?.impact ?? '') as Level | '',
+    confidence: (existing?.confidence ?? '') as Confidence | '',
+    effort: (existing?.scoring?.effort ?? '') as Level | '',
     owner: existing?.owner ?? '',
     startDate: existing?.startDate ?? '',
     endDate: existing?.endDate ?? '',
@@ -127,20 +131,22 @@ export function ItemForm({ kind, target }: { kind: Kind; target: DrawerTarget })
     setSaving(true)
     setErrors({})
     setFormError(undefined)
-    const hasScore = values.impact || values.effort || (kind === 'initiative' && values.confidence)
-    const scoring = hasScore
-      ? {
-          impact: score(values.impact),
-          effort: score(values.effort),
-          ...(kind === 'initiative' ? { confidence: score(values.confidence) } : {}),
-        }
-      : undefined
+    const scoresChanged =
+      values.impact !== (existing?.scoring?.impact ?? '') ||
+      values.effort !== (existing?.scoring?.effort ?? '')
+    const scoring =
+      values.impact || values.effort
+        ? { impact: values.impact || undefined, effort: values.effort || undefined }
+        : undefined
     const common = {
       title: values.title,
       description: optional(values.description),
       status: values.status,
       priority: values.priority || undefined,
       scoring,
+      confidence: values.confidence || undefined,
+      // A hand-placement on the matrix is kept, unless the scores it was an alternative to are changed here.
+      matrixOverride: scoresChanged ? undefined : existing?.matrixOverride,
       owner: optional(values.owner),
       startDate: optional(values.startDate),
       endDate: optional(values.endDate),
@@ -281,37 +287,58 @@ export function ItemForm({ kind, target }: { kind: Kind; target: DrawerTarget })
 
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-3 text-title font-semibold text-foreground">Estimates</legend>
-          <div
-            className={
-              kind === 'initiative' ? 'grid gap-4 sm:grid-cols-3' : 'grid gap-4 sm:grid-cols-2'
-            }
-          >
-            <ScoreSelect
+          <div className="grid gap-4 sm:grid-cols-3">
+            <LevelSelect
               label="Expected impact"
-              kind="impact"
               value={values.impact}
-              onChange={(v) => set('impact', v)}
+              onChange={(v) => set('impact', v as Level | '')}
               error={errors['scoring.impact']}
             />
-            {kind === 'initiative' && (
-              <ScoreSelect
-                label="Confidence"
-                kind="confidence"
-                value={values.confidence}
-                onChange={(v) => set('confidence', v)}
-                error={errors['scoring.confidence']}
-              />
-            )}
-            <ScoreSelect
+            <LevelSelect
               label="Effort"
-              kind="effort"
               value={values.effort}
-              onChange={(v) => set('effort', v)}
+              onChange={(v) => set('effort', v as Level | '')}
               error={errors['scoring.effort']}
             />
+            <Field
+              label="Confidence"
+              labelAddon={
+                <Tooltip
+                  content={
+                    <ConfidenceKey className="[&_dd]:text-background/80 [&_dt]:text-background" />
+                  }
+                >
+                  <button
+                    type="button"
+                    className="rounded-full text-muted-foreground hover:text-foreground"
+                    aria-label="What the confidence labels mean"
+                  >
+                    <Info className="size-3.5" aria-hidden />
+                  </button>
+                </Tooltip>
+              }
+              error={errors.confidence}
+            >
+              {(c) => (
+                <Select
+                  {...c}
+                  value={values.confidence}
+                  onChange={(e) => set('confidence', e.target.value as Confidence | '')}
+                >
+                  <option value="">Not set</option>
+                  {CONFIDENCE_LEVELS.map((l) => (
+                    <option key={l} value={l}>
+                      {CONFIDENCE_LABELS[l]}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
           </div>
-          <p className="text-caption text-muted-foreground">
-            Each is 1 to 5. Impact and confidence: higher is better. Effort: higher is more work.
+          <p className="text-caption text-muted-foreground" aria-live="polite">
+            {values.confidence
+              ? CONFIDENCE_HELP[values.confidence]
+              : 'Impact: how much it matters. Effort: how much work. Confidence: how sure the plan is about it.'}
           </p>
         </fieldset>
 

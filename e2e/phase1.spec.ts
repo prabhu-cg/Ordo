@@ -45,9 +45,9 @@ test.describe('landing page', () => {
     await page.getByRole('banner').getByRole('link', { name: 'Get started' }).click()
     await expect(page).toHaveURL(/\/app\/new$/)
     await page.goto('/')
-    await page.getByRole('link', { name: 'Use the Solo maker launch template' }).click()
-    await expect(page).toHaveURL(/\/app\/new\?template=solo-maker-launch$/)
-    await expect(page.getByRole('radio', { name: /Solo maker launch/ })).toBeChecked()
+    await page.getByRole('link', { name: 'Use the Solo founder roadmap template' }).click()
+    await expect(page).toHaveURL(/\/app\/new\?template=solo-founder$/)
+    await expect(page.getByRole('radio', { name: /Solo founder roadmap/ })).toBeChecked()
   })
 
   test('footer links go to real pages and sign in is honest', async ({ page }) => {
@@ -212,7 +212,7 @@ test.describe('product creation', () => {
   test('from a template: copies it, links the records, and leaves the original untouched', async ({
     page,
   }) => {
-    await page.goto('/app/new?template=saas-mvp')
+    await page.goto('/app/new?template=startup-mvp')
     await page.getByRole('button', { name: 'Next' }).click()
     await page.getByLabel('Product name').fill('Orbit')
     await page.getByRole('button', { name: 'Next' }).click()
@@ -231,7 +231,7 @@ test.describe('product creation', () => {
     await expect(page.getByText('Orbit').first()).toBeVisible()
 
     // Using the template twice gives two independent products.
-    await page.goto('/app/new?template=saas-mvp')
+    await page.goto('/app/new?template=startup-mvp')
     await page.getByRole('button', { name: 'Next' }).click()
     await page.getByLabel('Product name').fill('Orbit two')
     await page.getByRole('button', { name: 'Next' }).click()
@@ -239,7 +239,7 @@ test.describe('product creation', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Orbit two' })).toBeVisible()
 
     // The sample is unchanged.
-    await page.goto('/app/example?template=saas-mvp')
+    await page.goto('/app/example?template=startup-mvp')
     await expect(page.getByText('Customer discovery interviews')).toBeVisible()
   })
 
@@ -261,12 +261,12 @@ test.describe('example roadmap', () => {
   test('is explorable, read-only, and never touches the workspace', async ({ page }) => {
     await page.goto('/example')
     await expect(page.getByRole('heading', { level: 1, name: 'Example roadmap' })).toBeVisible()
-    await page.getByRole('button', { name: 'Build the MVP' }).click()
-    await expect(page.getByRole('dialog').getByText('Prioritisation')).toBeVisible()
+    await page.getByRole('button', { name: 'Build the MVP, initiative' }).click()
     await expect(page.getByRole('dialog').getByText('Sample, read-only')).toBeVisible()
+    await expect(page.getByRole('dialog').getByText('Impact')).toBeVisible()
     await page.keyboard.press('Escape')
-    await page.getByLabel('Sample').selectOption('client-product')
-    await expect(page.getByText('Discovery and goals').first()).toBeVisible()
+    await page.getByLabel('Template').selectOption('feature-development')
+    await expect(page.getByText('Discovery').first()).toBeVisible()
     await page.getByRole('tab', { name: 'Timeline' }).click()
     await page.getByRole('tab', { name: 'Board' }).click()
 

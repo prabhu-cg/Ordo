@@ -1,5 +1,6 @@
 import type Dexie from 'dexie'
 import type { Transaction } from 'dexie'
+import { migrateWorkItemV1 } from '@/domain'
 
 /**
  * Database schema history. Each entry is one IndexedDB schema version.
@@ -7,7 +8,7 @@ import type { Transaction } from 'dexie'
  * To change the schema:
  *   1. Append a new entry (never edit a shipped one) with ONLY the tables whose indexes change.
  *   2. Add an `upgrade` function if existing records need reshaping.
- *   3. Bump SCHEMA_VERSION in src/domain/v1/common.ts (or add a v2 domain folder) and add a
+ *   3. Bump SCHEMA_VERSION in src/domain/schema/common.ts and add a
  *      backup migration in backup-migrations.ts so old backup files still restore.
  *   4. Add a test in storage/migrations.test.ts.
  */
@@ -33,6 +34,25 @@ export const DB_VERSIONS: DbVersion[] = [
       dependencies: 'id, productId, fromId, toId, [fromType+fromId], [toType+toId]',
       revisions: 'id, productId, createdAt, [entityType+entityId]',
       meta: 'key',
+    },
+  },
+  {
+    // Schema 2: impact and effort become low/medium/high, confidence becomes exploring/tentative/committed,
+    // and custom templates get a table.
+    version: 2,
+    stores: { templates: 'id, name, updatedAt' },
+    upgrade: async (tx) => {
+      for (const name of ['initiatives', 'features']) {
+        await tx
+          .table(name)
+          .toCollection()
+          .modify((record: Record<string, unknown>) => {
+            // Copy first: a record that needs no change comes back as the very same object.
+            const next = { ...migrateWorkItemV1(record) }
+            for (const k of Object.keys(record)) delete record[k]
+            Object.assign(record, next)
+          })
+      }
     },
   },
 ]

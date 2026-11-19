@@ -21,7 +21,8 @@ import {
   type WorkStatus,
 } from '@/domain'
 import { formatDate, monthShort, pluralise } from '@/lib/format'
-import { LANE_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import { ConfidenceBadge, PriorityBadge } from '@/components/domain/indicators'
+import { LANE_LABELS, LEVEL_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 
 /**
@@ -373,28 +374,11 @@ export function RoadmapViewer({
   )
 }
 
-function Score({ label, value, hint }: { label: string; value?: number; hint: string }) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-2">
-      <dt className="text-body text-ink">
-        {label} <span className="text-caption text-muted-foreground">{hint}</span>
-      </dt>
-      <dd className="flex items-center gap-2">
-        <span aria-hidden className="flex gap-0.5">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <span
-              key={n}
-              className={cn(
-                'h-2 w-4 rounded-full',
-                value && n <= value ? 'bg-primary' : 'bg-secondary',
-              )}
-            />
-          ))}
-        </span>
-        <span className="w-10 text-right text-body font-semibold text-foreground tabular-nums">
-          {value ?? '—'} / 5
-        </span>
-      </dd>
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <dt className="text-body text-ink">{label}</dt>
+      <dd className="text-body font-semibold text-foreground">{children}</dd>
     </div>
   )
 }
@@ -470,21 +454,22 @@ function InitiativeDrawer({
                   Prioritisation
                 </h3>
                 <dl className="mt-2 max-w-md divide-y border-y">
-                  <Score
-                    label="Impact"
-                    hint="higher is better"
-                    value={initiative.scoring?.impact}
-                  />
-                  <Score
-                    label="Confidence"
-                    hint="higher is better"
-                    value={initiative.scoring?.confidence}
-                  />
-                  <Score
-                    label="Effort"
-                    hint="higher is more work"
-                    value={initiative.scoring?.effort}
-                  />
+                  <Row label="Impact">
+                    {initiative.scoring?.impact
+                      ? LEVEL_LABELS[initiative.scoring.impact]
+                      : 'Not set'}
+                  </Row>
+                  <Row label="Effort">
+                    {initiative.scoring?.effort
+                      ? LEVEL_LABELS[initiative.scoring.effort]
+                      : 'Not set'}
+                  </Row>
+                  <Row label="Confidence">
+                    <ConfidenceBadge confidence={initiative.confidence} />
+                  </Row>
+                  <Row label="Priority">
+                    <PriorityBadge priority={initiative.priority} />
+                  </Row>
                 </dl>
               </section>
               <section aria-labelledby="d-features">

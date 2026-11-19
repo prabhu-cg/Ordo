@@ -1,6 +1,6 @@
-# Data model (schema version 1)
+# Data model (schema version 2)
 
-Source: `src/domain/v1/`. All ids are UUID strings; timestamps are ISO-8601; planning dates are `YYYY-MM-DD`. "Soft" = archived via `deletedAt` (absent means active).
+Source: `src/domain/schema/`. All ids are UUID strings; timestamps are ISO-8601; planning dates are `YYYY-MM-DD`. "Soft" = archived via `deletedAt` (absent means active).
 
 ```
 Product ─┬─ Objective ── Initiative ── Feature
@@ -64,3 +64,25 @@ A roadmap is `entries`: a list of references to initiatives and features. The th
 **An item may be on a roadmap once** (enforced), and on any number of roadmaps. **Planning mode:** `flexible` means lanes are set by hand and dates are optional; `dates` means the lane follows each item's dates (now = this month and next, next = the three months after, later = beyond; undated items keep their stored lane) and moving a dated card to another column moves its dates. **Item types** only hide a kind in this roadmap; entries are kept.
 
 **Dependencies:** `fromType/fromId blocks toType/toId`, or `relates`. Both ends must exist in the product, a link cannot be added twice (a "relates" link counts the same in either direction), and a "blocks" link cannot close a loop.
+
+## Prioritisation (schema 2)
+
+- **Scores** are words, not numbers: `scoring.impact` and `scoring.effort` are `low | medium | high`. Version 1 stored 1–5; the upgrade maps 1–2 to low, 3 to medium, 4–5 to high (`levelFromScore`). Initiatives and features also carry `priority` (`low | medium | high | critical`), `confidence` (`exploring | tentative | committed`) and an optional `matrixOverride`.
+- **The matrix** (`quadrantOf` in `src/domain/prioritisation.ts`, the one place the rule lives, covered by tests). An item needs both scores to be placed.
+
+  |               | effort low | effort medium | effort high   |
+  | ------------- | ---------- | ------------- | ------------- |
+  | impact high   | quick win  | quick win     | major project |
+  | impact medium | quick win  | major project | major project |
+  | impact low    | fill-in    | fill-in       | reconsider    |
+
+  `matrixOverride` records a hand placement and wins until the item's scores change, when it is cleared. The matrix never reads or writes `priority`.
+
+- **Dependencies** keep the rules above; deleting a record removes the links that pointed at it, and a backup with a link to a missing record is rejected on import.
+
+## Templates (schema 2)
+
+- A **starter template** (six of them, in `src/templates/definitions.ts`) is code, validated by `templateDefinitionSchema`. A **custom template** is a row in the `templates` table (`templateRecordSchema`), made by `templateFromRoadmap` from a roadmap's structure.
+- A template holds objectives, initiatives, features, milestones, links and roadmap lanes by key, with dates as month offsets. `resolveTemplate` turns one into a `ProductBundle` with fresh ids and real dates, and the workspace saves the bundle in one transaction. The template is never changed by being used. A saved template carries structure, priorities, estimates, descriptions, tags on initiatives and features, link notes and milestone notes; owners are left out on purpose.
+- Products made from a starter are flagged `sampleData` with `templateName`, shown as a banner and a badge until the user selects "These are mine now". Custom templates do not set the flag.
+- The template **preview** runs the real roadmap views against an in-memory copy (`RoadmapBindings`), so nothing is written. "Reset preview" restores the original.

@@ -23,7 +23,7 @@ src/
   app/                 App root and router
   components/ui/       Design-system components (shadcn-style, Radix + Tailwind)
   components/shell/    Sidebar, header, product switcher, product form
-  domain/v1/           Zod schemas and types for every entity (versioned)
+  domain/schema/       Zod schemas and types for every entity (schema version 2)
   storage/             The only code allowed to touch Dexie/IndexedDB
     db.ts              Tables · migrations.ts  Schema versions
     repository.ts      Generic CRUD, safe update, soft delete, revisions

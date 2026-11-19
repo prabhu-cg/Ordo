@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /** Current version of the domain schema. Bump when any persisted shape changes, and add a migration. */
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const isoDate = z.iso.datetime({ offset: true })
 /** A calendar day (YYYY-MM-DD), used for planning dates that have no time of day. */
@@ -36,15 +36,21 @@ export const ENTITY_TYPES = [
   'roadmapView',
   'tag',
   'dependency',
+  'template',
 ] as const
 export type EntityType = (typeof ENTITY_TYPES)[number]
 
-/** Lightweight prioritisation: 1 (low) to 5 (high). Effort 5 means a lot of work. */
-const score = z.number().int().min(1).max(5)
+/**
+ * Lightweight prioritisation: how much an item matters (impact) and how much work it is (effort), each low,
+ * medium or high. Version 1 of the data used 1 to 5; see migrate.ts.
+ */
+export const LEVELS = ['low', 'medium', 'high'] as const
+export const levelSchema = z.enum(LEVELS)
+export type Level = z.infer<typeof levelSchema>
+
 export const scoringSchema = z.object({
-  impact: score.optional(),
-  confidence: score.optional(),
-  effort: score.optional(),
+  impact: levelSchema.optional(),
+  effort: levelSchema.optional(),
 })
 export type Scoring = z.infer<typeof scoringSchema>
 
@@ -107,3 +113,13 @@ export type PlanningMode = z.infer<typeof planningModeSchema>
 export const ROADMAP_ITEM_TYPES = ['initiative', 'feature', 'milestone'] as const
 export const roadmapItemTypeSchema = z.enum(ROADMAP_ITEM_TYPES)
 export type RoadmapItemType = z.infer<typeof roadmapItemTypeSchema>
+
+/** How sure the plan is about an item. */
+export const CONFIDENCE_LEVELS = ['exploring', 'tentative', 'committed'] as const
+export const confidenceSchema = z.enum(CONFIDENCE_LEVELS)
+export type Confidence = z.infer<typeof confidenceSchema>
+
+/** The four areas of the impact and effort matrix. */
+export const QUADRANTS = ['quick-wins', 'major-projects', 'fill-ins', 'reconsider'] as const
+export const quadrantSchema = z.enum(QUADRANTS)
+export type Quadrant = z.infer<typeof quadrantSchema>

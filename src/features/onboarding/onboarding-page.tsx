@@ -28,22 +28,40 @@ function Tree({ rows }: { rows: { depth: 0 | 1 | 2; kind: string; text: string }
 
 function ScoreExample() {
   const rows = [
-    { name: 'Landing page and waitlist', impact: 4, confidence: 5, effort: 2, verdict: 'Do first' },
-    { name: 'Public launch', impact: 5, confidence: 2, effort: 2, verdict: 'Check the risk' },
-    { name: 'Self-serve billing', impact: 4, confidence: 3, effort: 4, verdict: 'Later' },
+    {
+      name: 'Landing page and waitlist',
+      impact: 'High',
+      effort: 'Low',
+      confidence: 'Committed',
+      verdict: 'Quick win',
+    },
+    {
+      name: 'Public launch',
+      impact: 'High',
+      effort: 'Low',
+      confidence: 'Exploring',
+      verdict: 'Quick win, but not yet decided',
+    },
+    {
+      name: 'Self-serve billing',
+      impact: 'High',
+      effort: 'High',
+      confidence: 'Tentative',
+      verdict: 'Major project',
+    },
   ]
   return (
     <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-input border text-left text-body">
       <caption className="sr-only">Example scores</caption>
       <thead className="bg-surface">
         <tr>
-          {['Initiative', 'Impact', 'Confidence', 'Effort', 'Read as'].map((h, i) => (
+          {['Initiative', 'Impact', 'Effort', 'Confidence', 'On the matrix'].map((h, i) => (
             <th
               key={h}
               scope="col"
               className={cn(
                 'border-b px-3 py-2 text-label font-semibold text-muted-foreground',
-                i > 0 && i < 4 && 'text-right',
+                i === 99 && 'text-right',
               )}
             >
               {h}
@@ -57,9 +75,9 @@ function ScoreExample() {
             <th scope="row" className="border-b px-3 py-2.5 font-medium text-foreground">
               {r.name}
             </th>
-            <td className="border-b px-3 py-2.5 text-right tabular-nums">{r.impact}</td>
-            <td className="border-b px-3 py-2.5 text-right tabular-nums">{r.confidence}</td>
-            <td className="border-b px-3 py-2.5 text-right tabular-nums">{r.effort}</td>
+            <td className="border-b px-3 py-2.5">{r.impact}</td>
+            <td className="border-b px-3 py-2.5">{r.effort}</td>
+            <td className="border-b px-3 py-2.5">{r.confidence}</td>
             <td className="border-b px-3 py-2.5 text-foreground">{r.verdict}</td>
           </tr>
         ))}
@@ -123,8 +141,8 @@ const STEPS = [
     title: 'Prioritisation',
     summary: 'Decide what goes first.',
     body: [
-      'Score each item from 1 to 5 for impact, confidence and effort. High impact, high confidence and low effort usually goes first.',
-      'The scores are a prompt for a conversation, not a formula. Change them when you learn something.',
+      'Rate each item low, medium or high for impact and for effort, and say how confident you are: exploring, tentative or committed. The Prioritise page plots them as quick wins, major projects, fill-ins and things to reconsider.',
+      'The matrix is a guide, not a formula. It never changes an item’s priority, and you can place any item by hand.',
     ],
     example: <ScoreExample />,
   },

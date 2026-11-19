@@ -138,14 +138,16 @@ describe('initiatives', () => {
         priority: 'high',
         owner: 'Sam',
         status: 'planned',
-        scoring: { impact: 5, confidence: 3, effort: 2 },
+        confidence: 'tentative',
+        scoring: { impact: 'high', effort: 'low' },
       }),
     )
     expect(i).toMatchObject({
       objectiveId: o.id,
       priority: 'high',
       owner: 'Sam',
-      scoring: { impact: 5, confidence: 3, effort: 2 },
+      confidence: 'tentative',
+      scoring: { impact: 'high', effort: 'low' },
     })
     const moved = await s.planning.saveInitiative(
       productId,
@@ -180,7 +182,7 @@ describe('initiatives', () => {
       ),
     ).rejects.toMatchObject({ code: 'VALIDATION' })
     await expect(
-      s.planning.saveInitiative(productId, initiative('X', { scoring: { impact: 6 } })),
+      s.planning.saveInitiative(productId, initiative('X', { scoring: { impact: 6 as never } })),
     ).rejects.toMatchObject({ code: 'VALIDATION' })
   })
 })
@@ -196,7 +198,8 @@ describe('features', () => {
         owner: 'Lee',
         startDate: '2026-11-01',
         endDate: '2026-11-30',
-        scoring: { impact: 4, effort: 3 },
+        scoring: { impact: 'high', effort: 'medium' },
+        confidence: 'committed',
         newTags: ['Growth'],
       }),
     )

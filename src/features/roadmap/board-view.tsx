@@ -13,8 +13,7 @@ import { Field } from '@/components/ui/field'
 import { Select } from '@/components/ui/input'
 import type { Feature, Initiative } from '@/domain'
 import { PRIORITY_LABELS, STATUS_LABELS } from '@/lib/labels'
-import { useItemDrawer } from '@/store/drawer-store'
-import { moveRow, removeRow, saveViewConfig, updateItem } from './actions'
+import { useBindings } from './bindings'
 import { DragBoard } from './drag-board'
 import { boardColumns, groupPatch, type GroupBy } from './engine'
 import { CARD_FIELD_LABELS, DEFAULT_CARD_FIELDS, type CardField } from './card-fields'
@@ -44,7 +43,13 @@ const isGroup = (v: unknown): v is GroupBy => GROUPS.some((g) => g.value === v)
  */
 export function BoardView({ data }: { data: Data }) {
   const { roadmap, filtered, initiatives, objectives, tags, views } = data
-  const openRoadmapItem = useItemDrawer((s) => s.openRoadmapItem)
+  const {
+    moveRow,
+    removeRow,
+    saveViewConfig,
+    updateItem,
+    openItem: openRoadmapItem,
+  } = useBindings()
   const view = views.find((v) => v.layout === 'board')
   const config = view?.config ?? {}
   const groupBy: GroupBy = isGroup(config.groupBy) ? config.groupBy : 'status'
@@ -180,6 +185,7 @@ export function BoardView({ data }: { data: Data }) {
             <RoadmapCard
               row={row}
               fields={fields}
+              links={data.links.get(row.key)}
               hideStatus={groupBy === 'status'}
               parentTitle={groupBy === 'initiative' ? undefined : parent?.title}
               objectiveTitle={objectiveTitle(row)}

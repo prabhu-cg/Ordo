@@ -1,8 +1,23 @@
-import { clientProduct, saasMvp, soloMakerLaunch } from './definitions'
+import {
+  featureDevelopment,
+  productRedesign,
+  quarterlyProduct,
+  saasProduct,
+  soloFounder,
+  startupMvp,
+} from './definitions'
 import type { TemplateDefinition } from './types'
 
-export const TEMPLATES: readonly TemplateDefinition[] = [soloMakerLaunch, saasMvp, clientProduct]
-export const DEFAULT_SAMPLE_TEMPLATE_ID = saasMvp.id
+/** The built-in templates, in the order they are offered. */
+export const TEMPLATES: readonly TemplateDefinition[] = [
+  startupMvp,
+  saasProduct,
+  quarterlyProduct,
+  featureDevelopment,
+  productRedesign,
+  soloFounder,
+]
+export const DEFAULT_SAMPLE_TEMPLATE_ID = startupMvp.id
 
 export const getTemplate = (id: string | null | undefined): TemplateDefinition | undefined =>
   TEMPLATES.find((t) => t.id === id)

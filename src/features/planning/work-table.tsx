@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
-import type { Priority, Tag, WorkStatus } from '@/domain'
-import { PRIORITY_BADGE, PRIORITY_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import type { Tag, WorkStatus } from '@/domain'
+import { STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 
 /** Shared building blocks for the initiatives and features tables. */
@@ -9,16 +9,6 @@ export const td = 'border-b px-3 py-3 align-top'
 
 export const StatusBadge = ({ status }: { status: WorkStatus }) => (
   <Badge variant={STATUS_BADGE[status]}>{STATUS_LABELS[status]}</Badge>
-)
-export const PriorityBadge = ({ priority }: { priority?: Priority }) =>
-  priority ? (
-    <Badge variant={PRIORITY_BADGE[priority]}>{PRIORITY_LABELS[priority]}</Badge>
-  ) : (
-    <span className="text-muted-foreground">—</span>
-  )
-
-export const Score = ({ value }: { value?: number }) => (
-  <span className="tabular-nums">{value ?? '—'}</span>
 )
 
 export function TagList({

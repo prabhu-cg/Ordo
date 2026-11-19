@@ -13,7 +13,8 @@ import { FilterBar } from './filter-bar'
 import { PlanningGate } from './planning-gate'
 import { NONE, SORT_OPTIONS, WORK_STATUS_OPTIONS, filterInitiatives } from './query'
 import { useFilters } from './use-filters'
-import { PriorityBadge, Score, StatusBadge, TableFrame, TagList, td, th } from './work-table'
+import { ConfidenceBadge, LevelText, PriorityBadge } from '@/components/domain/indicators'
+import { StatusBadge, TableFrame, TagList, td, th } from './work-table'
 
 export function InitiativesPage() {
   usePageTitle('Initiatives')
@@ -133,13 +134,13 @@ function InitiativesContent() {
                     <th scope="col" className={cn(th, 'hidden md:table-cell')}>
                       Priority
                     </th>
-                    <th scope="col" className={cn(th, 'hidden text-right lg:table-cell')}>
+                    <th scope="col" className={cn(th, 'hidden lg:table-cell')}>
                       Impact
                     </th>
-                    <th scope="col" className={cn(th, 'hidden text-right lg:table-cell')}>
+                    <th scope="col" className={cn(th, 'hidden lg:table-cell')}>
                       Confidence
                     </th>
-                    <th scope="col" className={cn(th, 'hidden text-right lg:table-cell')}>
+                    <th scope="col" className={cn(th, 'hidden lg:table-cell')}>
                       Effort
                     </th>
                     <th scope="col" className={cn(th, 'hidden xl:table-cell')}>
@@ -192,14 +193,14 @@ function InitiativesContent() {
                         <td className={cn(td, 'hidden md:table-cell')}>
                           <PriorityBadge priority={i.priority} />
                         </td>
-                        <td className={cn(td, 'hidden text-right lg:table-cell')}>
-                          <Score value={i.scoring?.impact} />
+                        <td className={cn(td, 'hidden lg:table-cell')}>
+                          <LevelText level={i.scoring?.impact} />
                         </td>
-                        <td className={cn(td, 'hidden text-right lg:table-cell')}>
-                          <Score value={i.scoring?.confidence} />
+                        <td className={cn(td, 'hidden lg:table-cell')}>
+                          <ConfidenceBadge confidence={i.confidence} />
                         </td>
-                        <td className={cn(td, 'hidden text-right lg:table-cell')}>
-                          <Score value={i.scoring?.effort} />
+                        <td className={cn(td, 'hidden lg:table-cell')}>
+                          <LevelText level={i.scoring?.effort} />
                         </td>
                         <td className={cn(td, 'hidden xl:table-cell')}>
                           {i.owner ?? <span className="text-muted-foreground">—</span>}

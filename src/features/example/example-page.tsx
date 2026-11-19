@@ -1,74 +1,77 @@
-import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { RoadmapViewer } from '@/components/roadmap/roadmap-preview'
 import { PageHeader } from '@/components/shell/page-header'
-import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Select } from '@/components/ui/input'
 import { usePageTitle } from '@/features/marketing/use-page-title'
-import {
-  DEFAULT_SAMPLE_TEMPLATE_ID,
-  TEMPLATES,
-  describeTemplate,
-  getTemplate,
-  resolveTemplate,
-} from '@/templates'
+import { duplicateTemplate } from '@/features/templates/actions'
+import { TemplatePreview } from '@/features/templates/template-preview'
+import { useTemplates } from '@/features/templates/use-templates'
+import { DEFAULT_SAMPLE_TEMPLATE_ID, TEMPLATES, describeTemplate } from '@/templates'
 
 /**
- * A read-only sample. It renders a template through the same view components a saved product uses,
- * but it is never written to storage: nothing here can change a template or the user's products.
+ * Explore any template in a throwaway preview: nothing here is saved or changes your own products.
+ * In the app the list also includes your own templates; on the public site it is the built-in six.
  */
-export function ExampleContent() {
+export function ExampleContent({ app = false }: { app?: boolean }) {
   const [params, setParams] = useSearchParams()
-  const template = getTemplate(params.get('template')) ?? getTemplate(DEFAULT_SAMPLE_TEMPLATE_ID)!
+  const { all, find } = useTemplates()
+  const options = app ? all : all.filter((e) => e.builtIn)
+  const entry = find(params.get('template')) ??
+    options.find((e) => e.template.id === DEFAULT_SAMPLE_TEMPLATE_ID) ?? {
+      template: TEMPLATES[0]!,
+      builtIn: true,
+    }
+  const { template, builtIn } = entry
   usePageTitle('Example roadmap')
-  const bundle = useMemo(
-    () => resolveTemplate(template, { product: { name: template.name } }),
-    [template],
-  )
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Example roadmap"
-        description="Look around a finished plan. It is a read-only sample, so nothing you do here is saved or changes your own products."
+        description="Look around a finished plan and try it out. It is a preview, so nothing you do here is saved or changes your own products."
         actions={
-          <Button asChild variant="primary">
-            <Link to={`/app/new?template=${template.id}`}>Use this template</Link>
-          </Button>
+          <>
+            {app && (
+              <Button
+                variant="outline"
+                onClick={() => void duplicateTemplate(builtIn ? template : template.id)}
+              >
+                Duplicate template
+              </Button>
+            )}
+            <Button asChild variant="primary">
+              <Link to={`/app/new?template=${template.id}`}>Use this template</Link>
+            </Button>
+          </>
         }
       />
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <Field label="Sample" className="w-full sm:max-w-sm" hint={describeTemplate(template)}>
-          {(c) => (
-            <Select
-              {...c}
-              value={template.id}
-              onChange={(e) => setParams({ template: e.target.value }, { replace: true })}
-            >
-              {TEMPLATES.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </div>
+      <Field label="Template" className="w-full sm:max-w-sm" hint={describeTemplate(template)}>
+        {(c) => (
+          <Select
+            {...c}
+            value={template.id}
+            onChange={(e) => setParams({ template: e.target.value }, { replace: true })}
+          >
+            {options.map((e) => (
+              <option key={e.template.id} value={e.template.id}>
+                {e.template.name}
+                {e.builtIn ? '' : ' (yours)'}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
       <p className="max-w-prose text-body text-muted-foreground">
-        {template.summary} Select any initiative to see its details.
+        {template.summary} <span className="text-foreground">{template.bestFor}</span> Select a card
+        for its details.
       </p>
-      <RoadmapViewer key={template.id} bundle={bundle} selectable />
-      <Alert tone="info" title="This is a sample" className="max-w-3xl">
-        Using the template copies it into a new product of your own. The original stays exactly as
-        it is.
-      </Alert>
+      <TemplatePreview key={template.id} template={template} sample={builtIn} />
     </div>
   )
 }
 
-/** The same sample inside the public site's layout. */
+/** The same preview inside the public site's layout. */
 export function PublicExamplePage() {
   return (
     <div className="bg-background">

@@ -10,6 +10,7 @@ import type {
   Roadmap,
   RoadmapView,
   Tag,
+  TemplateRecord,
 } from '@/domain'
 import { DB_VERSIONS, registerVersions, type DbVersion } from './migrations'
 
@@ -32,6 +33,7 @@ export const DATA_TABLES = [
   'tags',
   'dependencies',
   'revisions',
+  'templates',
 ] as const
 export type DataTableName = (typeof DATA_TABLES)[number]
 
@@ -46,6 +48,7 @@ export class OrdoDB extends Dexie {
   tags!: EntityTable<Tag, 'id'>
   dependencies!: EntityTable<Dependency, 'id'>
   revisions!: EntityTable<Revision, 'id'>
+  templates!: EntityTable<TemplateRecord, 'id'>
   meta!: EntityTable<MetaRecord, 'key'>
 
   constructor(name: string = DB_NAME, versions: DbVersion[] = DB_VERSIONS) {

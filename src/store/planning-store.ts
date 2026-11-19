@@ -103,13 +103,13 @@ export const usePlanningStore = create<PlanningState>((set, get) => {
 
     async load(productId) {
       if (!productId) {
-        useUndoStore.getState().clear()
+        useUndoStore.getState().switchTo(undefined)
         set({ productId: undefined, status: 'idle', error: undefined, ...EMPTY })
         return
       }
       // Switching product: drop the old product's records immediately so they are never shown against the new one.
       if (get().productId !== productId) {
-        useUndoStore.getState().clear() // an undo belongs to the product it was made in
+        useUndoStore.getState().switchTo(productId) // an undo belongs to the product it was made in
         set({ productId, status: 'loading', error: undefined, ...EMPTY })
       }
       try {

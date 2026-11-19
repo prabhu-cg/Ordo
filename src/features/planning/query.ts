@@ -1,6 +1,6 @@
-import type { Feature, Initiative, Objective, Priority, Tag, WorkStatus } from '@/domain'
+import type { Feature, Initiative, Level, Objective, Priority, Tag, WorkStatus } from '@/domain'
 import { WORK_STATUSES, objectiveProgress } from '@/domain'
-import { STATUS_LABELS } from '@/lib/labels'
+import { LEVEL_RANK, STATUS_LABELS } from '@/lib/labels'
 
 /** Values the toolbar can hold. Empty string means "any". */
 export interface Filters {
@@ -58,7 +58,7 @@ interface Sortable {
   updatedAt: string
   status: string
   priority?: Priority
-  scoring?: { impact?: number; effort?: number }
+  scoring?: { impact?: Level; effort?: Level }
 }
 
 const compareTitle = (a: { title: string }, b: { title: string }) =>
@@ -95,9 +95,23 @@ export function sortItems<T extends Sortable>(items: T[], sort: string): T[] {
           tie(a, b),
       )
     case 'impact':
-      return out.sort((a, b) => byOptional(a.scoring?.impact, b.scoring?.impact, -1) || tie(a, b))
+      return out.sort(
+        (a, b) =>
+          byOptional(
+            a.scoring?.impact && LEVEL_RANK[a.scoring.impact],
+            b.scoring?.impact && LEVEL_RANK[b.scoring.impact],
+            -1,
+          ) || tie(a, b),
+      )
     case 'effort':
-      return out.sort((a, b) => byOptional(a.scoring?.effort, b.scoring?.effort, 1) || tie(a, b))
+      return out.sort(
+        (a, b) =>
+          byOptional(
+            a.scoring?.effort && LEVEL_RANK[a.scoring.effort],
+            b.scoring?.effort && LEVEL_RANK[b.scoring.effort],
+            1,
+          ) || tie(a, b),
+      )
     default:
       return out.sort(tie)
   }

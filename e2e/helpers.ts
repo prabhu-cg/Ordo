@@ -58,43 +58,53 @@ export async function dragTo(
 export async function keyboardDrag(page: Page, handle: Locator, arrows: string[]) {
   const live = page.locator('[id^="DndLiveRegion"]')
   const text = async () => (await live.textContent()) ?? ''
-  const announced = () => text().then((t) => /Picked up|is over/.test(t))
-  for (let attempt = 0; attempt < 4; attempt++) {
-    await handle.focus()
-    await page.keyboard.press('Space')
-    // Pick-up is announced and then at once replaced by where the card is.
-    const ok = await expect
-      .poll(announced, { timeout: 1500 })
+  const poll = (fn: () => Promise<boolean>, timeout: number) =>
+    expect
+      .poll(fn, { timeout })
       .toBe(true)
       .then(
         () => true,
         () => false,
       )
-    if (ok) break
-    if (attempt === 3) throw new Error('The card could not be picked up with the keyboard')
+
+  // If the page re-renders while a card is held (it can, on a busy machine) the drag is lost, so start over.
+  for (let round = 0; round < 4; round++) {
+    await handle.focus()
+    await page.keyboard.press('Space')
+    // Pick-up is announced and then at once replaced by where the card is.
+    if (!(await poll(() => text().then((t) => /Picked up|is over/.test(t)), 1500))) {
+      await page.keyboard.press('Escape')
+      continue
+    }
+    // dnd-kit starts listening for the arrow keys a moment after it announces the pick-up.
+    await page.waitForTimeout(250)
+    let lost = false
+    for (const arrow of arrows) {
+      const before = await text()
+      await page.keyboard.press(arrow)
+      const moved = await poll(async () => {
+        const t = await text()
+        return t.includes('is over') && t !== before
+      }, 2000)
+      if (!moved) {
+        lost = true
+        break
+      }
+    }
+    if (!lost) {
+      await page.waitForTimeout(100)
+      await page.keyboard.press('Space') // the caller then waits for the result it expects, which is the real proof of the drop
+      return
+    }
     await page.keyboard.press('Escape')
+    await page.waitForTimeout(300)
   }
-  for (const arrow of arrows) {
-    const before = await text()
-    await page.keyboard.press(arrow)
-    // Go on only once it says it is over something new (the text can blank for a moment in between).
-    await expect
-      .poll(
-        async () => {
-          const t = await text()
-          return t.includes('is over') && t !== before
-        },
-        { timeout: 3000 },
-      )
-      .toBe(true)
-  }
-  await page.waitForTimeout(100)
-  await page.keyboard.press('Space') // the caller then waits for the result it expects, which is the real proof of the drop
+  throw new Error('The card could not be moved with the keyboard')
 }
 
 /** A product from the SaaS template with its roadmap open: 5 initiatives, 3 now/next/later lanes. */
 export async function openTemplateRoadmap(page: Page) {
-  await createFromTemplate(page, 'saas-mvp', 'Orbit')
+  await createFromTemplate(page, 'startup-mvp', 'Orbit')
   await page.goto('/app/roadmaps')
   await page.getByRole('link', { name: 'Open Roadmap' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Roadmap' })).toBeVisible()

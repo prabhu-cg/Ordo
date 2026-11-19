@@ -10,7 +10,9 @@ import {
   laneSchema,
   longText,
   planningHorizonSchema,
+  confidenceSchema,
   planningModeSchema,
+  quadrantSchema,
   prioritySchema,
   roadmapItemTypeSchema,
   productCategorySchema,
@@ -44,6 +46,9 @@ export const productSchema = z.object({
   // Added after the first release as optional fields: older records and backups remain valid.
   category: productCategorySchema.optional(),
   planningHorizon: planningHorizonSchema.optional(),
+  /** Set when the product was started from a template: its records are examples until the user says otherwise. */
+  sampleData: z.boolean().optional(),
+  templateName: longText(120).optional(),
 })
 export type Product = z.infer<typeof productSchema>
 
@@ -98,6 +103,9 @@ export const initiativeSchema = z
     status: workStatusSchema,
     scoring: scoringSchema.optional(),
     priority: prioritySchema.optional(),
+    confidence: confidenceSchema.optional(),
+    /** A manual placement on the impact and effort matrix, in place of the one the scores give. */
+    matrixOverride: quadrantSchema.optional(),
     owner: longText(80).optional(),
     tagIds: z.array(idSchema),
     startDate: calendarDay.optional(),
@@ -119,6 +127,9 @@ export const featureSchema = z
     status: workStatusSchema,
     scoring: scoringSchema.optional(),
     priority: prioritySchema.optional(),
+    confidence: confidenceSchema.optional(),
+    /** A manual placement on the impact and effort matrix, in place of the one the scores give. */
+    matrixOverride: quadrantSchema.optional(),
     owner: longText(80).optional(),
     tagIds: z.array(idSchema),
     startDate: calendarDay.optional(),
@@ -195,6 +206,7 @@ export const roadmapViewSchema = z.object({
           z.enum([
             'priority',
             'confidence',
+            'dependencies',
             'owner',
             'dates',
             'tags',

@@ -1,5 +1,6 @@
 import { Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { ConfidenceBadge, PriorityBadge } from '@/components/domain/indicators'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +19,7 @@ import {
   type Dependency,
   type Feature,
   type Initiative,
+  type Level,
   type Lane,
   type Priority,
   type WorkStatus,
@@ -25,7 +27,7 @@ import {
 import { formatDate } from '@/lib/format'
 import {
   LANE_LABELS,
-  PRIORITY_BADGE,
+  LEVEL_LABELS,
   PRIORITY_LABELS,
   STATUS_BADGE,
   STATUS_LABELS,
@@ -160,7 +162,7 @@ export function RoadmapItemDrawer({ roadmapId, itemType, itemId }: Props) {
         : item.endDate
           ? `Until ${formatDate(item.endDate)}`
           : 'No dates'
-  const score = (v?: number) => (v === undefined ? 'Not set' : `${v} of 5`)
+  const level = (v?: Level) => (v ? LEVEL_LABELS[v] : 'Not set')
 
   const facts: [string, React.ReactNode][] = [
     ['Objective', objective?.title ?? 'None'],
@@ -172,11 +174,12 @@ export function RoadmapItemDrawer({ roadmapId, itemType, itemId }: Props) {
         {dates}
       </span>,
     ],
-    ['Impact', score(item.scoring?.impact)],
-    ...(initiative
-      ? ([['Confidence', score(item.scoring?.confidence)]] as [string, React.ReactNode][])
-      : []),
-    ['Effort', score(item.scoring?.effort)],
+    ['Impact', level(item.scoring?.impact)],
+    ['Effort', level(item.scoring?.effort)],
+    [
+      'Confidence',
+      item.confidence ? <ConfidenceBadge key="c" confidence={item.confidence} /> : 'Not set',
+    ],
   ]
 
   return (
@@ -186,11 +189,8 @@ export function RoadmapItemDrawer({ roadmapId, itemType, itemId }: Props) {
         <DrawerDescription asChild>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={STATUS_BADGE[item.status]}>{STATUS_LABELS[item.status]}</Badge>
-            {item.priority && (
-              <Badge variant={PRIORITY_BADGE[item.priority]}>
-                {PRIORITY_LABELS[item.priority]}
-              </Badge>
-            )}
+            {item.priority && <PriorityBadge priority={item.priority} />}
+            {item.confidence && <ConfidenceBadge confidence={item.confidence} />}
             <span className="text-caption text-muted-foreground">
               {feature ? 'Feature' : 'Initiative'} on “{roadmap.name}”
             </span>

@@ -206,9 +206,10 @@ function ProductGrid({ products }: { products: Product[] }) {
                 ) : (
                   <p className="mt-1.5 text-body text-muted-foreground">No description yet.</p>
                 )}
-                {p.category && (
-                  <div className="mt-3">
-                    <Badge>{CATEGORY_LABELS[p.category]}</Badge>
+                {(p.category || p.sampleData) && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {p.category && <Badge>{CATEGORY_LABELS[p.category]}</Badge>}
+                    {p.sampleData && <Badge variant="outline">Sample data</Badge>}
                   </div>
                 )}
                 <dl className="mt-auto flex flex-wrap gap-x-5 gap-y-1 pt-5 text-caption text-muted-foreground">

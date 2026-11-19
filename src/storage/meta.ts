@@ -9,6 +9,11 @@ export function createMeta(db: OrdoDB) {
       guard(async () => {
         await db.meta.put({ key, value })
       }),
+    /** Remove every key that starts with a prefix (used to drop saved undo history). */
+    removePrefix: (prefix: string) =>
+      guard(async () => {
+        await db.meta.where('key').startsWith(prefix).delete()
+      }),
     remove: (key: string) =>
       guard(async () => {
         await db.meta.delete(key)
@@ -17,3 +22,5 @@ export function createMeta(db: OrdoDB) {
 }
 
 export const META_KEYS = { activeProductId: 'activeProductId', onboarding: 'onboarding' } as const
+/** Saved undo history is kept per product, under this prefix. */
+export const UNDO_KEY_PREFIX = 'undo:'

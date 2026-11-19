@@ -19,3 +19,9 @@ Ordo's wordmark is the text "Ordo" in the display serif with the tagline "Plan b
 `public/ordo-logo.svg` is the supplied mark (a ring with an amber swoosh). The app renders it inline (`components/shell/logo-mark.tsx`, paths unchanged) so the ring follows the theme's foreground colour and stays visible in dark mode; the swoosh keeps its authored colour (`--logo-accent`). `public/favicon.svg` is the same paths with a `prefers-color-scheme` rule that lightens the ring on dark browser chrome.
 
 `cn()` (`lib/utils.ts`) is configured with our custom font-size, radius and shadow tokens. Without that, tailwind-merge mistakes `text-body` for a colour and drops the variant's real text colour.
+
+## Indicators
+
+`components/domain/indicators.tsx` is the one place that draws priority, confidence, impact and effort, and dependency state, so a table, a card and the matrix look the same. Colour is never the only signal: priority has an arrow (critical ▲▲, high ▲, medium =, low ▼), confidence an icon (exploring, tentative, committed), and every badge says its word. Confidence and dependency badges are focusable and explain themselves in a tooltip, so keyboard users get the same help as people with a mouse.
+
+Toasts (`components/ui/toast.tsx`) are our own rather than Radix's. They do not react to Escape, so the key always closes the drawer or dialog you are in, and an Undo button is not lost when you close what you just edited.

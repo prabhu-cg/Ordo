@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useBlocker, useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/shell/page-header'
 import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Field } from '@/components/ui/field'
@@ -18,7 +19,8 @@ import { usePageTitle } from '@/features/marketing/use-page-title'
 import { CATEGORY_LABELS, HORIZON_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import { toStorageError } from '@/storage'
-import { TEMPLATES, describeTemplate, getTemplate, resolveTemplate } from '@/templates'
+import { useTemplates } from '@/features/templates/use-templates'
+import { describeTemplate, resolveTemplate } from '@/templates'
 import { useWorkspaceStore, type ProductInput } from '@/store/workspace-store'
 
 interface Values {
@@ -50,7 +52,9 @@ export function NewProductPage() {
   const [params] = useSearchParams()
   const { createProduct, createProductFromBundle } = useWorkspaceStore()
 
-  const initialTemplate = getTemplate(params.get('template'))
+  const { all, find } = useTemplates()
+  const requested = params.get('template')
+  const initialTemplate = find(requested)?.template
   const [step, setStep] = useState(0)
   const [values, setValues] = useState<Values>({
     templateId: initialTemplate?.id ?? '',
@@ -59,14 +63,21 @@ export function NewProductPage() {
     category: initialTemplate?.category ?? '',
     targetAudience: '',
     vision: '',
-    horizon: initialTemplate?.horizon ?? '',
+    horizon: initialTemplate?.structure.horizon ?? '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const finished = useRef(false)
+  useEffect(() => {
+    // A template of your own named in the address may load a moment after the page does.
+    const t = requested ? find(requested)?.template : undefined
+    if (t && values.templateId === '' && step === 0 && !dirty) chooseTemplate(t.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requested, all.length])
 
-  const template = getTemplate(values.templateId)
+  const entry = find(values.templateId)
+  const template = entry?.template
   const dirty = [values.name, values.tagline, values.targetAudience, values.vision].some(
     (v) => v.trim() !== '',
   )
@@ -84,12 +95,12 @@ export function NewProductPage() {
   })
 
   function chooseTemplate(id: string) {
-    const t = getTemplate(id)
+    const t = find(id)?.template
     setValues((v) => ({
       ...v,
       templateId: id,
       category: t?.category ?? v.category,
-      horizon: t?.horizon ?? v.horizon,
+      horizon: t?.structure.horizon ?? v.horizon,
     }))
   }
 
@@ -123,7 +134,10 @@ export function NewProductPage() {
       planningHorizon: values.horizon || undefined,
     }
     try {
-      if (template) await createProductFromBundle(resolveTemplate(template, { product }))
+      if (template)
+        await createProductFromBundle(
+          resolveTemplate(template, { product, sample: entry!.builtIn }),
+        )
       else await createProduct(product)
       finished.current = true
       toast.success('Product created', values.name.trim())
@@ -187,11 +201,12 @@ export function NewProductPage() {
               summary: 'A blank product. Add objectives, initiatives and features yourself.',
               counts: '',
             },
-            ...TEMPLATES.map((t) => ({
-              id: t.id,
-              name: t.name,
-              summary: t.summary,
-              counts: describeTemplate(t),
+            ...all.map((e) => ({
+              id: e.template.id,
+              name: e.template.name,
+              summary: e.template.summary,
+              counts: describeTemplate(e.template),
+              own: !e.builtIn,
             })),
           ].map((o) => (
             <label
@@ -211,7 +226,10 @@ export function NewProductPage() {
                 onChange={() => chooseTemplate(o.id)}
               />
               <span className="min-w-0">
-                <span className="block text-body font-semibold text-foreground">{o.name}</span>
+                <span className="flex items-center gap-2 text-body font-semibold text-foreground">
+                  {o.name}
+                  {'own' in o && o.own && <Badge variant="soft">Yours</Badge>}
+                </span>
                 <span className="mt-0.5 block text-body text-muted-foreground">{o.summary}</span>
                 {o.counts && (
                   <span className="mt-1 block text-caption text-muted-foreground tabular-nums">

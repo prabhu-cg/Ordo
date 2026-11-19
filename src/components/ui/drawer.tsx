@@ -41,7 +41,19 @@ export function DrawerContent({
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
-      <DialogPrimitive.Content className={cn(drawerVariants({ side, size }), className)} {...props}>
+      <DialogPrimitive.Content
+        // Focus the panel itself, unless a field inside already asked for focus. Otherwise focus would land on
+        // whatever is first, such as a badge with a tooltip, and the tooltip would swallow the first Escape.
+        onOpenAutoFocus={(e) => {
+          const panel = e.currentTarget as HTMLElement
+          if (!panel.contains(document.activeElement)) {
+            e.preventDefault()
+            panel.focus()
+          }
+        }}
+        className={cn(drawerVariants({ side, size }), className)}
+        {...props}
+      >
         {children}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

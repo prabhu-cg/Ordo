@@ -3,6 +3,8 @@ import { AddItemsDrawer } from '@/features/roadmap/add-items-drawer'
 import { MilestoneForm } from '@/features/roadmap/milestone-form'
 import { RoadmapForm } from '@/features/roadmap/roadmap-form'
 import { RoadmapItemDrawer } from '@/features/roadmap/roadmap-item-drawer'
+import { EditTemplateForm } from '@/features/templates/edit-template-form'
+import { SaveTemplateForm } from '@/features/templates/save-template-form'
 import { useItemDrawer } from '@/store/drawer-store'
 import { DeleteDialog } from './delete-dialogs'
 import { ItemForm } from './item-form'
@@ -52,6 +54,23 @@ export function ItemDrawers() {
       <Drawer open={Boolean(s.milestone)} onOpenChange={(o) => !o && s.closeMilestone()}>
         <DrawerContent>
           {s.milestone && <MilestoneForm key={s.milestone.id ?? 'new'} {...s.milestone} />}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={Boolean(s.saveTemplate)} onOpenChange={(o) => !o && s.closeSaveTemplate()}>
+        <DrawerContent size="lg">
+          {s.saveTemplate && (
+            <SaveTemplateForm
+              key={s.saveTemplate.roadmapId ?? 'any'}
+              roadmapId={s.saveTemplate.roadmapId}
+            />
+          )}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={Boolean(s.editTemplate)} onOpenChange={(o) => !o && s.closeEditTemplate()}>
+        <DrawerContent>
+          {s.editTemplate && <EditTemplateForm key={s.editTemplate.id} id={s.editTemplate.id} />}
         </DrawerContent>
       </Drawer>
 

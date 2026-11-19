@@ -12,7 +12,9 @@ import {
   initialAnchor,
   laneFromDates,
   laneWindows,
+  linkSummaries,
   pixelsToDays,
+  planMove,
   placeEntry,
   rangeOf,
   resolveDrop,
@@ -196,6 +198,83 @@ describe('placeEntry: reordering in the one shared order', () => {
     expect(order(r).sort()).toEqual(['a', 'b', 'c', 'f'])
     expect(order(r)).toEqual(['a', 'b', 'c', 'f'])
     expect(placeEntry(entries, 'initiative:zzz', undefined, 'after')).toBe(entries)
+  })
+})
+
+describe('planMove: what a move does, in one place', () => {
+  const entries = [entry('initiative', 'a', 1, 'now'), entry('initiative', 'b', 2, 'next')]
+  const rowOf = (id: string, over: Partial<Initiative> = {}) => ({
+    key: `initiative:${id}`,
+    kind: 'initiative' as const,
+    entry: entries.find((e) => e.itemId === id)!,
+    item: ini(id, over),
+  })
+  const today = '2026-11-19'
+
+  it('on a flexible roadmap a lane change moves only the entry, never the dates', () => {
+    const plan = planMove({
+      entries,
+      row: rowOf('a', { startDate: '2026-11-02', endDate: '2026-11-12' }),
+      lane: 'later',
+      mode: 'flexible',
+      today,
+    })
+    expect(plan.entries.find((e) => e.itemId === 'a')?.lane).toBe('later')
+    expect(plan.itemPatch).toEqual({})
+  })
+  it('on a date-based roadmap the lane change also moves the dates to follow it', () => {
+    const plan = planMove({
+      entries,
+      row: rowOf('a', { startDate: '2026-11-02', endDate: '2026-11-12' }),
+      lane: 'next',
+      mode: 'dates',
+      today,
+    })
+    expect(plan.itemPatch).toEqual({ startDate: '2027-01-01', endDate: '2027-01-11' })
+    const none = planMove({ entries, row: rowOf('a'), lane: 'next', mode: 'dates', today }) // undated: lane only
+    expect(none.itemPatch).toEqual({})
+  })
+  it('drops fields of the item patch that would not change anything', () => {
+    expect(
+      planMove({
+        entries,
+        row: rowOf('a', { status: 'planned' }),
+        itemPatch: { status: 'planned' },
+        today,
+      }).unchanged,
+    ).toBe(true)
+    expect(
+      planMove({
+        entries,
+        row: rowOf('a', { status: 'planned' }),
+        itemPatch: { status: 'shipped' },
+        today,
+      }).itemPatch,
+    ).toEqual({ status: 'shipped' })
+  })
+  it('with reorder off, the order is left alone and only the lane changes', () => {
+    const plan = planMove({
+      entries,
+      row: rowOf('a'),
+      drop: { anchorKey: 'initiative:b', place: 'after' },
+      lane: 'next',
+      reorder: false,
+      today,
+    })
+    expect(plan.entries.map((e) => e.itemId)).toEqual(['a', 'b'])
+    expect(plan.entries[0]!.lane).toBe('next')
+  })
+  it('reorders and renumbers when asked', () => {
+    const plan = planMove({
+      entries,
+      row: rowOf('a'),
+      drop: { anchorKey: 'initiative:b', place: 'after' },
+      today,
+    })
+    expect(plan.entries.map((e) => [e.itemId, e.order])).toEqual([
+      ['b', 1],
+      ['a', 2],
+    ])
   })
 })
 
@@ -428,6 +507,47 @@ describe('swimlanes', () => {
     expect(lanes[0]!.own).toBeTruthy()
     expect(lanes[1]!.own).toBeUndefined() // b has a feature on the roadmap but is not itself on it
     expect(lanes[1]!.features).toHaveLength(1)
+  })
+})
+
+describe('linkSummaries: dependency indicators', () => {
+  const dep = (from: string, to: string, kind: Dependency['kind'] = 'blocks'): Dependency => ({
+    ...stamp,
+    id: `${kind}${from}${to}`,
+    fromType: 'initiative',
+    fromId: from,
+    toType: 'initiative',
+    toId: to,
+    kind,
+  })
+  const items: Record<string, { title: string; status: Initiative['status'] }> = {
+    a: { title: 'A', status: 'in-progress' },
+    b: { title: 'B', status: 'idea' },
+    c: { title: 'C', status: 'shipped' },
+  }
+  const lookup = (_t: 'initiative' | 'feature', id: string) => items[id]
+
+  it('says what each item waits for and what waits for it, with the direction', () => {
+    const m = linkSummaries([dep('a', 'b')], lookup)
+    expect(m.get('initiative:b')!.blockedBy.map((x) => x.title)).toEqual(['A'])
+    expect(m.get('initiative:a')!.blocks.map((x) => x.title)).toEqual(['B'])
+    expect(m.get('initiative:b')!.waiting).toBe(true)
+    expect(m.get('initiative:a')!.waiting).toBe(false)
+  })
+  it('stops waiting once the blocker is shipped or dropped', () => {
+    const m = linkSummaries([dep('c', 'b')], lookup)
+    expect(m.get('initiative:b')!.blockedBy[0]!.done).toBe(true)
+    expect(m.get('initiative:b')!.waiting).toBe(false)
+  })
+  it('a relates link shows on both ends and never blocks', () => {
+    const m = linkSummaries([dep('a', 'b', 'relates')], lookup)
+    expect(m.get('initiative:a')!.related.map((x) => x.title)).toEqual(['B'])
+    expect(m.get('initiative:b')!.related.map((x) => x.title)).toEqual(['A'])
+    expect(m.get('initiative:b')!.waiting).toBe(false)
+  })
+  it('ignores a link to something that no longer exists, so a deleted record leaves no dangling indicator', () => {
+    const m = linkSummaries([dep('a', 'ghost'), dep('ghost', 'b')], lookup)
+    expect(m.size).toBe(0)
   })
 })
 

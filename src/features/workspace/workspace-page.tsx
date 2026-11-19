@@ -5,6 +5,7 @@ import type { ShellContext } from '@/components/shell/app-shell'
 import { PageHeader } from '@/components/shell/page-header'
 import { StorageGate } from '@/components/shell/storage-gate'
 import { Badge } from '@/components/ui/badge'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
@@ -53,6 +54,7 @@ const OTHER: WorkStatus[] = ['paused', 'dropped']
 function Overview({ product }: { product: Product }) {
   const { openEditProduct } = useOutletContext<ShellContext>()
   const archiveProduct = useWorkspaceStore((s) => s.archiveProduct)
+  const updateProduct = useWorkspaceStore((s) => s.updateProduct)
   const open = useItemDrawer((s) => s.open)
   const openRoadmapForm = useItemDrawer((s) => s.openRoadmapForm)
   const { objectives, initiatives, features, roadmaps } = usePlanningStore()
@@ -81,6 +83,37 @@ function Overview({ product }: { product: Product }) {
 
   return (
     <div className="flex flex-col gap-12">
+      {product.sampleData && (
+        <Alert
+          tone="info"
+          title={
+            product.templateName
+              ? `Started from the “${product.templateName}” template`
+              : 'Started from a template'
+          }
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 self-center"
+              onClick={() =>
+                void updateProduct(product.id, {
+                  sampleData: undefined,
+                  templateName: undefined,
+                }).then(
+                  () => toast.success('Marked as your own', 'The sample label is gone.'),
+                  (e) => toast.error('Could not save', toStorageError(e).message),
+                )
+              }
+            >
+              These are mine now
+            </Button>
+          }
+        >
+          The objectives, initiatives and features here are sample data that show the shape of a
+          plan. Edit them, delete them or replace them with your own, then dismiss this note.
+        </Alert>
+      )}
       <PageHeader
         title={product.name}
         description={product.tagline}

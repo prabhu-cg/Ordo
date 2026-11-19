@@ -183,6 +183,59 @@ export function resolveDrop(
   return { containerId: to, anchorKey: overId, place: 'before' }
 }
 
+export interface MovePlan {
+  entries: RoadmapEntry[]
+  /** The changes to the item itself that the move implies. Empty if none. */
+  itemPatch: Record<string, unknown>
+  /** Nothing would change. */
+  unchanged: boolean
+}
+
+export interface MoveRequest {
+  entries: RoadmapEntry[]
+  row: RoadmapRow
+  drop?: { anchorKey?: string; place: Place }
+  /** The lane to put it in; null means no lane; undefined leaves it. */
+  lane?: Lane | null
+  /** Changes to the item a board drop implies (status, priority, initiative). */
+  itemPatch?: Record<string, unknown>
+  /** False when cards are sorted by something other than your order, so only the lane or field changes. */
+  reorder?: boolean
+  mode?: PlanningMode
+  today: string
+}
+
+/**
+ * Everything a move does, as a pure function: where the entry goes in the roadmap's order, which lane it is in,
+ * and any change to the item (including, on a date-based roadmap, new dates that follow the lane). The real app
+ * and the template preview both use it, so they behave identically.
+ */
+export function planMove(r: MoveRequest): MovePlan {
+  const item = r.row.item as unknown as Record<string, unknown>
+  const itemPatch: Record<string, unknown> = Object.fromEntries(
+    Object.entries(r.itemPatch ?? {}).filter(([k, v]) => item[k] !== v),
+  )
+  const entryPatch: Partial<RoadmapEntry> = {}
+  if (r.lane !== undefined) {
+    entryPatch.lane = r.lane ?? undefined
+    if (r.mode === 'dates' && r.lane && isDated(r.row.item)) {
+      const range = datesForLane(r.lane, r.row.item, r.today)
+      itemPatch.startDate = range.start
+      itemPatch.endDate = range.end
+    }
+  }
+  const entries =
+    // No drop position means the card was not placed anywhere in particular, so the order stays as it is.
+    r.reorder === false || !r.drop
+      ? r.entries.map((e) =>
+          rowKey(e.itemType, e.itemId) === r.row.key ? { ...e, ...entryPatch } : e,
+        )
+      : placeEntry(r.entries, r.row.key, r.drop?.anchorKey, r.drop?.place ?? 'after', entryPatch)
+  const unchanged =
+    JSON.stringify(entries) === JSON.stringify(r.entries) && Object.keys(itemPatch).length === 0
+  return { entries, itemPatch, unchanged }
+}
+
 // ── Filtering and sorting ───────────────────────────────────────────────────
 
 export interface RowFilters {
@@ -486,6 +539,47 @@ export function visibleLinks(deps: Dependency[], keys: Set<string>) {
   return deps.filter(
     (d) => keys.has(rowKey(d.fromType, d.fromId)) && keys.has(rowKey(d.toType, d.toId)),
   )
+}
+
+export interface LinkSummary {
+  blockedBy: { key: string; title: string; done: boolean }[]
+  blocks: { key: string; title: string }[]
+  related: { key: string; title: string }[]
+  /** Something it depends on is not finished yet. */
+  waiting: boolean
+}
+
+/**
+ * For each item, what it waits for, what waits for it, and what it relates to. A link whose other end no longer
+ * exists is ignored rather than shown as a hole, so a deleted record can never leave a dangling indicator.
+ */
+export function linkSummaries(
+  deps: Dependency[],
+  lookup: (type: ItemType, id: string) => { title: string; status: WorkStatus } | undefined,
+): Map<string, LinkSummary> {
+  const out = new Map<string, LinkSummary>()
+  const entry = (key: string) => {
+    let e = out.get(key)
+    if (!e) out.set(key, (e = { blockedBy: [], blocks: [], related: [], waiting: false }))
+    return e
+  }
+  for (const d of deps) {
+    const from = lookup(d.fromType, d.fromId)
+    const to = lookup(d.toType, d.toId)
+    if (!from || !to) continue
+    const fromKey = rowKey(d.fromType, d.fromId)
+    const toKey = rowKey(d.toType, d.toId)
+    if (d.kind === 'blocks') {
+      const done = from.status === 'shipped' || from.status === 'dropped'
+      entry(toKey).blockedBy.push({ key: fromKey, title: from.title, done })
+      entry(fromKey).blocks.push({ key: toKey, title: to.title })
+    } else {
+      entry(fromKey).related.push({ key: toKey, title: to.title })
+      entry(toKey).related.push({ key: fromKey, title: from.title })
+    }
+  }
+  for (const e of out.values()) e.waiting = e.blockedBy.some((b) => !b.done)
+  return out
 }
 
 // ── Milestones ──────────────────────────────────────────────────────────────

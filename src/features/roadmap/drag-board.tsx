@@ -64,39 +64,81 @@ export function DragBoard({
   const columnIds = useMemo(() => new Set(columns.map((c) => c.id)), [columns])
 
   /**
-   * Left and right step between columns (landing on the card nearest the same height, or the top of an empty
-   * column); up and down move within a column. dnd-kit's own keyboard movement only handles a single list.
+   * Arrow keys move a picked-up card through whatever layout the columns are in, including a grid of rows:
+   * left and right go to the column beside, up and down go to the next card in the column or, at its end, to the
+   * column above or below. dnd-kit's own keyboard movement only understands a single list.
    */
   const coordinateGetter: KeyboardCoordinateGetter = (event, args) => {
     const { context } = args
-    if (
-      (event.code === 'ArrowLeft' || event.code === 'ArrowRight') &&
-      context.active &&
-      context.collisionRect
-    ) {
-      event.preventDefault()
-      const rect = context.collisionRect
-      const centre = rect.left + rect.width / 2
-      const rects = columns.flatMap((c) => {
-        const r = context.droppableRects.get(c.id)
-        return r ? [{ column: c, rect: r }] : []
-      })
-      rects.sort((a, b) => a.rect.left - b.rect.left)
-      const current = rects.findIndex((x) => centre >= x.rect.left && centre <= x.rect.right)
-      const target = rects[(current === -1 ? 0 : current) + (event.code === 'ArrowRight' ? 1 : -1)]
-      if (!target) return undefined
-      const cards = target.column.keys.flatMap((k) => {
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[
+      event.code as string
+    ]
+    if (!dir || !context.active || !context.collisionRect)
+      return sortableKeyboardCoordinates(event, args)
+    event.preventDefault()
+    const rect = context.collisionRect
+    const cx = rect.left + rect.width / 2
+    const cy = rect.top + rect.height / 2
+    const cols = columns.flatMap((c) => {
+      const r = context.droppableRects.get(c.id)
+      return r ? [{ column: c, rect: r, x: r.left + r.width / 2, y: r.top + r.height / 2 }] : []
+    })
+    if (cols.length === 0) return undefined
+    const current =
+      cols.find(
+        (c) => cx >= c.rect.left && cx <= c.rect.right && cy >= c.rect.top && cy <= c.rect.bottom,
+      ) ?? cols[0]!
+    const cardRects = (c: (typeof cols)[number]) =>
+      c.column.keys.flatMap((k) => {
         const r = context.droppableRects.get(k)
         return r ? [r] : []
       })
-      const nearest = cards.sort(
-        (a, b) => Math.abs(a.top - rect.top) - Math.abs(b.top - rect.top),
-      )[0]
-      return nearest
-        ? { x: nearest.left, y: nearest.top }
-        : { x: target.rect.left + 12, y: target.rect.top + 12 }
+    const land = (c: (typeof cols)[number], from: 'nearest' | 'first' | 'last') => {
+      const cards = cardRects(c).sort((a, b) => a.top - b.top)
+      const card =
+        from === 'first'
+          ? cards[0]
+          : from === 'last'
+            ? cards[cards.length - 1]
+            : [...cards].sort((a, b) => Math.abs(a.top - rect.top) - Math.abs(b.top - rect.top))[0]
+      return card ? { x: card.left, y: card.top } : { x: c.rect.left + 12, y: c.rect.top + 12 }
     }
-    return sortableKeyboardCoordinates(event, args)
+
+    if (dir[0] !== 0) {
+      const beside = cols.filter(
+        (c) =>
+          c !== current &&
+          (dir[0]! > 0
+            ? c.rect.left >= current.rect.right - 1
+            : c.rect.right <= current.rect.left + 1),
+      )
+      beside.sort(
+        (a, b) =>
+          Math.abs(a.y - current.y) - Math.abs(b.y - current.y) ||
+          Math.abs(a.x - current.x) - Math.abs(b.x - current.x),
+      )
+      return beside[0] ? land(beside[0], 'nearest') : undefined
+    }
+    // Up and down: another card in this column first.
+    const sameColumn = cardRects(current).sort((a, b) => a.top - b.top)
+    const next =
+      dir[1]! > 0
+        ? sameColumn.find((r) => r.top > rect.top + 1)
+        : [...sameColumn].reverse().find((r) => r.top < rect.top - 1)
+    if (next) return { x: next.left, y: next.top }
+    const beyond = cols.filter(
+      (c) =>
+        c !== current &&
+        (dir[1]! > 0
+          ? c.rect.top >= current.rect.bottom - 1
+          : c.rect.bottom <= current.rect.top + 1),
+    )
+    beyond.sort(
+      (a, b) =>
+        Math.abs(a.x - current.x) - Math.abs(b.x - current.x) ||
+        Math.abs(a.y - current.y) - Math.abs(b.y - current.y),
+    )
+    return beyond[0] ? land(beyond[0], dir[1]! > 0 ? 'first' : 'last') : undefined
   }
 
   /** Over a card if the pointer is on one, else over the column it is in; the keyboard falls back to nearest corners. */

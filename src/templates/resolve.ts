@@ -1,5 +1,11 @@
-import { HORIZON_MONTHS, newId, type Draft, type Product, type ProductBundle } from '@/domain'
-import type { TemplateDefinition } from './types'
+import {
+  HORIZON_MONTHS,
+  newId,
+  type Draft,
+  type Product,
+  type ProductBundle,
+  type TemplateDefinition,
+} from '@/domain'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const day = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`
@@ -13,11 +19,16 @@ export interface ResolveOptions {
   product: Pick<Draft<Product>, 'name'> & Partial<Omit<Draft<Product>, 'id' | 'name'>>
   /** The month the plan starts in. Defaults to now. */
   anchor?: Date
+  /**
+   * Whether the records are examples. True for a built-in template: the product is marked as holding sample data
+   * until the user says otherwise. False for a custom template, which is the person's own structure.
+   */
+  sample?: boolean
 }
 
 /**
- * Turn a read-only template into a fresh, fully-linked set of records with new ids and real dates.
- * Pure: it never touches storage, and calling it twice gives two independent copies.
+ * Turn a template, built-in or custom, into a fresh, fully-linked set of records with new ids and real dates.
+ * Pure: it never touches storage and never changes the template. Calling it twice gives two independent copies.
  */
 export function resolveTemplate(
   template: TemplateDefinition,
@@ -31,28 +42,39 @@ export function resolveTemplate(
   const objectiveIds = new Map(template.objectives.map((o) => [o.key, newId()]))
   const initiativeIds = new Map(template.initiatives.map((i) => [i.key, newId()]))
 
+  const scoring = (impact?: 'low' | 'medium' | 'high', effort?: 'low' | 'medium' | 'high') =>
+    impact || effort ? { ...(impact ? { impact } : {}), ...(effort ? { effort } : {}) } : undefined
+  const dates = (months?: [number, number]) =>
+    months
+      ? { startDate: firstOfMonth(anchor, months[0]), endDate: lastOfMonth(anchor, months[1]) }
+      : {}
+
   const initiatives = template.initiatives.map((i, index) => ({
     ...common,
     id: initiativeIds.get(i.key)!,
-    objectiveId: objectiveIds.get(i.objective),
+    objectiveId: i.objective ? objectiveIds.get(i.objective) : undefined,
     title: i.title,
     description: i.description,
     status: i.status,
-    scoring: { ...i.scoring },
+    priority: i.priority,
+    confidence: i.confidence,
+    owner: i.owner,
+    scoring: scoring(i.impact, i.effort),
     tagIds: (i.tags ?? [])
       .map((name) => tagIds.get(name))
       .filter((id): id is string => Boolean(id)),
-    startDate: firstOfMonth(anchor, i.months[0]),
-    endDate: lastOfMonth(anchor, i.months[1]),
+    ...dates(i.months),
     order: index + 1,
   }))
 
   const roadmapId = newId()
+  const { structure } = template
   return {
     product: {
       id: productId,
       category: template.category,
-      planningHorizon: template.horizon,
+      planningHorizon: structure.horizon,
+      ...(options.sample === false ? {} : { sampleData: true, templateName: template.name }),
       ...options.product,
     },
     tags: template.tags.map((t) => ({
@@ -78,7 +100,13 @@ export function resolveTemplate(
         title: f.title,
         description: f.description,
         status: f.status,
-        tagIds: [],
+        priority: f.priority,
+        confidence: f.confidence,
+        scoring: scoring(f.impact, f.effort),
+        tagIds: (f.tags ?? [])
+          .map((name) => tagIds.get(name))
+          .filter((id): id is string => Boolean(id)),
+        ...dates(f.months),
         order: index + 1,
       })),
     ),
@@ -87,14 +115,31 @@ export function resolveTemplate(
       id: newId(),
       initiativeId: m.initiative ? initiativeIds.get(m.initiative) : undefined,
       title: m.title,
+      description: m.description,
       date: lastOfMonth(anchor, m.month),
       status: 'upcoming' as const,
     })),
-    dependencies: [],
+    dependencies: template.initiatives.flatMap((i) =>
+      (i.links ?? []).map((l) => ({
+        ...common,
+        id: newId(),
+        fromType: 'initiative' as const,
+        fromId: initiativeIds.get(i.key)!,
+        toType: 'initiative' as const,
+        toId: initiativeIds.get(l.to)!,
+        kind: l.kind,
+        note: l.note,
+      })),
+    ),
     roadmap: {
       ...common,
       id: roadmapId,
       name: 'Roadmap',
+      planningHorizon: structure.horizon,
+      defaultView: structure.defaultView,
+      planningMode: structure.planningMode,
+      itemTypes: structure.itemTypes,
+      // Placement only: dates belong to the initiatives themselves.
       entries: template.initiatives.map((i, index) => ({
         itemType: 'initiative' as const,
         itemId: initiativeIds.get(i.key)!,
@@ -117,5 +162,5 @@ export function resolveTemplate(
 
 /** Months the template spans, for display. */
 export function templateHorizonMonths(template: TemplateDefinition): number {
-  return HORIZON_MONTHS[template.horizon]
+  return HORIZON_MONTHS[template.structure.horizon]
 }

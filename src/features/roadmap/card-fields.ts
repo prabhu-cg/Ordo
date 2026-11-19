@@ -1,8 +1,17 @@
 export type CardField =
-  'priority' | 'confidence' | 'owner' | 'dates' | 'tags' | 'objective' | 'impact' | 'effort'
+  | 'priority'
+  | 'confidence'
+  | 'dependencies'
+  | 'owner'
+  | 'dates'
+  | 'tags'
+  | 'objective'
+  | 'impact'
+  | 'effort'
 export const CARD_FIELD_LABELS: Record<CardField, string> = {
   priority: 'Priority',
   confidence: 'Confidence',
+  dependencies: 'Dependencies',
   owner: 'Owner',
   dates: 'Dates',
   tags: 'Tags',
@@ -10,4 +19,10 @@ export const CARD_FIELD_LABELS: Record<CardField, string> = {
   impact: 'Impact',
   effort: 'Effort',
 }
-export const DEFAULT_CARD_FIELDS: CardField[] = ['priority', 'confidence', 'owner', 'dates']
+export const DEFAULT_CARD_FIELDS: CardField[] = [
+  'priority',
+  'confidence',
+  'dependencies',
+  'owner',
+  'dates',
+]

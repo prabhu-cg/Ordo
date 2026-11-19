@@ -14,8 +14,7 @@ import type { Milestone, WorkStatus } from '@/domain'
 import { formatDate } from '@/lib/format'
 import { LANE_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
-import { useItemDrawer } from '@/store/drawer-store'
-import { saveViewConfig, updateItem } from './actions'
+import { useBindings } from './bindings'
 import {
   monthEnd,
   monthName,
@@ -84,8 +83,7 @@ export function TimelineView({ data }: { data: Data }) {
   const { roadmap, filtered, initiatives, milestones, dependencies, views } = data
   const view = views.find((v) => v.layout === 'timeline')
   const config = view?.config ?? {}
-  const openRoadmapItem = useItemDrawer((s) => s.openRoadmapItem)
-  const openMilestone = useItemDrawer((s) => s.openMilestone)
+  const { saveViewConfig, updateItem, openItem: openRoadmapItem, openMilestone } = useBindings()
   const now = today()
 
   const [zoom, setZoomState] = useState<Zoom>(config.zoom ?? 'month')
@@ -249,9 +247,11 @@ export function TimelineView({ data }: { data: Data }) {
           >
             <Link2 aria-hidden /> Dependencies {showLinks ? 'on' : 'off'}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => openMilestone(undefined, now)}>
-            <Plus aria-hidden /> Milestone
-          </Button>
+          {openMilestone && (
+            <Button variant="outline" size="sm" onClick={() => openMilestone(undefined, now)}>
+              <Plus aria-hidden /> Milestone
+            </Button>
+          )}
         </div>
       </div>
 
@@ -390,7 +390,7 @@ export function TimelineView({ data }: { data: Data }) {
                       <MilestoneRow
                         milestones={visibleMilestones}
                         win={win}
-                        onOpen={(id) => openMilestone(id)}
+                        onOpen={openMilestone ? (id) => openMilestone(id) : undefined}
                       />
                     )}
                     {m.type === 'lane' && m.own && rangeOf(m.own.item) && (
@@ -552,7 +552,7 @@ function MilestoneRow({
 }: {
   milestones: Milestone[]
   win: ReturnType<typeof timelineWindow>
-  onOpen: (id: string) => void
+  onOpen?: (id: string) => void
 }) {
   // Show a label only when there is room, so nearby milestones do not print over each other.
   const inWindow = milestones
@@ -567,34 +567,54 @@ function MilestoneRow({
   }, [])
   return (
     <>
-      {withLabel.map(({ m, left, showLabel }) => (
-        <button
-          key={m.id}
-          type="button"
-          onClick={() => onOpen(m.id)}
-          title={`${m.title}, ${formatDate(m.date)}`}
-          aria-label={`Milestone: ${m.title}, ${formatDate(m.date)}. Open`}
-          className="absolute top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-sm"
-          style={{ left: `${left}%` }}
-        >
-          <span
-            aria-hidden
-            className={cn(
-              'size-3 shrink-0 -translate-x-1/2 rotate-45',
-              m.status === 'reached'
-                ? 'bg-success'
-                : m.status === 'missed'
-                  ? 'bg-destructive'
-                  : 'bg-primary-text',
+      {withLabel.map(({ m, left, showLabel }) => {
+        const marker = (
+          <>
+            <span
+              aria-hidden
+              className={cn(
+                'size-3 shrink-0 -translate-x-1/2 rotate-45',
+                m.status === 'reached'
+                  ? 'bg-success'
+                  : m.status === 'missed'
+                    ? 'bg-destructive'
+                    : 'bg-primary-text',
+              )}
+            />
+            {showLabel && (
+              <span className="-ml-1 max-w-32 truncate text-label font-semibold text-foreground">
+                {m.title}
+              </span>
             )}
-          />
-          {showLabel && (
-            <span className="-ml-1 max-w-32 truncate text-label font-semibold text-foreground">
-              {m.title}
-            </span>
-          )}
-        </button>
-      ))}
+          </>
+        )
+        const common = {
+          className: 'absolute top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-sm',
+          style: { left: `${left}%` },
+          title: `${m.title}, ${formatDate(m.date)}`,
+        }
+        // In a preview there is nothing to open, so a milestone is only a marker.
+        return onOpen ? (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => onOpen(m.id)}
+            aria-label={`Milestone: ${m.title}, ${formatDate(m.date)}. Open`}
+            {...common}
+          >
+            {marker}
+          </button>
+        ) : (
+          <span
+            key={m.id}
+            role="img"
+            aria-label={`Milestone: ${m.title}, ${formatDate(m.date)}`}
+            {...common}
+          >
+            {marker}
+          </span>
+        )
+      })}
     </>
   )
 }

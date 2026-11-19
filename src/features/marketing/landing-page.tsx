@@ -281,17 +281,17 @@ const AUDIENCES = [
   {
     title: 'Solo founders',
     body: 'You are the product team, the designer and the support desk. Keep one honest plan for what to build before launch, and a way to say no to the rest.',
-    template: 'solo-maker-launch',
+    template: 'solo-founder',
   },
   {
     title: 'Freelancers and consultants',
     body: 'Agree outcomes with a client, show progress in stages, and keep a separate plan for each engagement without a separate tool for each.',
-    template: 'client-product',
+    template: 'feature-development',
   },
   {
     title: 'Small product teams',
     body: 'Give everyone one shared picture of priorities. Sharing is by backup file for now: Ordo has no accounts or live collaboration yet.',
-    template: 'saas-mvp',
+    template: 'saas-product',
   },
 ]
 

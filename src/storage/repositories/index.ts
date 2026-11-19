@@ -8,6 +8,7 @@ import {
   roadmapSchema,
   roadmapViewSchema,
   tagSchema,
+  templateRecordSchema,
   type ProductBundle,
   type Revision,
 } from '@/domain'
@@ -74,6 +75,15 @@ export function createRepositories(db: OrdoDB) {
     softDelete: true,
   })
   // Views and dependencies are cheap to recreate: removed outright, no archive.
+  // Custom templates are the person's own reusable structures. They keep no revision history.
+  const templates = createRepository({
+    db,
+    revisions: false,
+    table: db.templates,
+    entityType: 'template',
+    schema: templateRecordSchema,
+    softDelete: true,
+  })
   const roadmapViews = createRepository({
     ...common,
     table: db.roadmapViews,
@@ -213,6 +223,7 @@ export function createRepositories(db: OrdoDB) {
     roadmapViews,
     tags,
     dependencies,
+    templates,
     revisions,
     countsForProduct,
     purgeProduct,

@@ -4,8 +4,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { LANES, type Lane, type PlanningMode } from '@/domain'
 import { LANE_LABELS, STATUS_LABELS } from '@/lib/labels'
-import { useItemDrawer } from '@/store/drawer-store'
-import { removeRow, moveRow, updateItem } from './actions'
+import { useBindings } from './bindings'
 import { today } from './dates'
 import { DragBoard, type BoardColumnSpec } from './drag-board'
 import { effectiveLane, type RoadmapRow } from './engine'
@@ -14,7 +13,7 @@ import { RoadmapCard } from './roadmap-card'
 import type { useRoadmapData } from './use-roadmap'
 
 type Data = ReturnType<typeof useRoadmapData>
-const FIELDS = new Set<CardField>(['priority', 'confidence', 'dates'])
+const FIELDS = new Set<CardField>(['priority', 'confidence', 'dependencies', 'dates'])
 
 /**
  * Now, next, later. Three flexible columns: drag cards between them or within them, or use the quick-edit
@@ -22,8 +21,7 @@ const FIELDS = new Set<CardField>(['priority', 'confidence', 'dates'])
  */
 export function NowNextLaterView({ data }: { data: Data }) {
   const { roadmap, filtered, initiatives } = data
-  const openRoadmapItem = useItemDrawer((s) => s.openRoadmapItem)
-  const openAdd = useItemDrawer((s) => s.openAddItems)
+  const { moveRow, updateItem, removeRow, openItem: openRoadmapItem, openAdd } = useBindings()
   const mode: PlanningMode | undefined = roadmap!.planningMode
   const now = today()
 
@@ -45,15 +43,17 @@ export function NowNextLaterView({ data }: { data: Data }) {
               {filtered.filter((r) => laneOf(r) === lane).length}
             </span>
           </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="size-7"
-            onClick={() => openAdd(roadmap!.id, lane)}
-            aria-label={`Add items to ${LANE_LABELS[lane]}`}
-          >
-            <Plus aria-hidden />
-          </Button>
+          {openAdd && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="size-7"
+              onClick={() => openAdd(roadmap!.id, lane)}
+              aria-label={`Add items to ${LANE_LABELS[lane]}`}
+            >
+              <Plus aria-hidden />
+            </Button>
+          )}
         </div>
       ),
     }))
@@ -113,6 +113,7 @@ export function NowNextLaterView({ data }: { data: Data }) {
             <RoadmapCard
               row={row}
               fields={FIELDS}
+              links={data.links.get(row.key)}
               parentTitle={parent?.title}
               lane={lane === 'none' ? undefined : lane}
               overlay={state.overlay}

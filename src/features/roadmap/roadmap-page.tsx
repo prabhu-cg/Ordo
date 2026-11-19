@@ -1,4 +1,12 @@
-import { MoreHorizontal, Plus, Settings2, Trash2, Undo2, Layers } from 'lucide-react'
+import {
+  Layers,
+  LayoutTemplate,
+  MoreHorizontal,
+  Plus,
+  Settings2,
+  Trash2,
+  Undo2,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/shell/page-header'
@@ -48,7 +56,7 @@ function RoadmapContent({ id }: { id?: string }) {
   const { roadmap, rows, filtered, filtering, filters, setFilter, clearFilters, initiatives } = data
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const { openAddItems, openRoadmapForm } = useItemDrawer()
+  const { openAddItems, openRoadmapForm, openSaveTemplate } = useItemDrawer()
   const lastUndo = useUndoStore((s) => s.stack.at(-1))
   const [confirmDelete, setConfirmDelete] = useState(false)
   usePageTitle(roadmap?.name)
@@ -141,6 +149,9 @@ function RoadmapContent({ id }: { id?: string }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => openSaveTemplate(roadmap.id)}>
+                  <LayoutTemplate aria-hidden /> Save as template
+                </DropdownMenuItem>
                 <DropdownMenuItem destructive onSelect={() => setConfirmDelete(true)}>
                   <Trash2 aria-hidden /> Delete roadmap
                 </DropdownMenuItem>

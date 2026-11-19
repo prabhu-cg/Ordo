@@ -1,4 +1,4 @@
-import type { Objective, Outcome } from './v1'
+import type { Objective, Outcome } from './schema'
 
 /** 0 to 1: how far `current` has moved from `baseline` towards `target`. Works for targets below the baseline. */
 export function outcomeProgress(o: Pick<Outcome, 'baseline' | 'target' | 'current'>): number {

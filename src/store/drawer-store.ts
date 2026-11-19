@@ -19,6 +19,10 @@ export interface RoadmapDrawers {
   /** Create (no id) or edit a roadmap's settings. */
   form?: { id?: string }
   milestone?: { id?: string; date?: string }
+  /** Save a roadmap's structure as a template. */
+  saveTemplate?: { roadmapId?: string }
+  /** Rename or re-describe a custom template. */
+  editTemplate?: { id: string }
 }
 
 interface DrawerState extends RoadmapDrawers {
@@ -38,6 +42,10 @@ interface DrawerState extends RoadmapDrawers {
   closeRoadmapForm: () => void
   openMilestone: (id?: string, date?: string) => void
   closeMilestone: () => void
+  openSaveTemplate: (roadmapId?: string) => void
+  closeSaveTemplate: () => void
+  openEditTemplate: (id: string) => void
+  closeEditTemplate: () => void
 }
 
 /** One place that says which drawer or confirmation is showing, so any page can open one. */
@@ -55,4 +63,8 @@ export const useItemDrawer = create<DrawerState>((set) => ({
   closeRoadmapForm: () => set({ form: undefined }),
   openMilestone: (id, date) => set({ milestone: { id, date } }),
   closeMilestone: () => set({ milestone: undefined }),
+  openSaveTemplate: (roadmapId) => set({ saveTemplate: { roadmapId } }),
+  closeSaveTemplate: () => set({ saveTemplate: undefined }),
+  openEditTemplate: (id) => set({ editTemplate: { id } }),
+  closeEditTemplate: () => set({ editTemplate: undefined }),
 }))

@@ -1,4 +1,12 @@
-import type { Lane, PlanningHorizon, Priority, ProductCategory, WorkStatus } from '@/domain'
+import type {
+  Confidence,
+  Lane,
+  Level,
+  PlanningHorizon,
+  Priority,
+  ProductCategory,
+  WorkStatus,
+} from '@/domain'
 
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   saas: 'Software as a service',
@@ -64,3 +72,29 @@ export const OBJECTIVE_STATUS_BADGE = {
   achieved: 'success',
   dropped: 'secondary',
 } as const
+
+export const LEVEL_LABELS: Record<Level, string> = { low: 'Low', medium: 'Medium', high: 'High' }
+/** For sorting: low is 1, high is 3. */
+export const LEVEL_RANK: Record<Level, number> = { low: 1, medium: 2, high: 3 }
+
+export const CONFIDENCE_LABELS: Record<Confidence, string> = {
+  exploring: 'Exploring',
+  tentative: 'Tentative',
+  committed: 'Committed',
+}
+/** What each confidence label means, shown in tooltips next to the label. */
+export const CONFIDENCE_HELP: Record<Confidence, string> = {
+  exploring: 'An idea we are looking into. Nothing is decided and it may change or be dropped.',
+  tentative: 'We intend to do this, but the scope or timing may still change.',
+  committed: 'We have decided to do this and are planning around it.',
+}
+export const CONFIDENCE_BADGE: Record<Confidence, 'secondary' | 'warning' | 'success'> = {
+  exploring: 'secondary',
+  tentative: 'warning',
+  committed: 'success',
+}
+export const CONFIDENCE_RANK: Record<Confidence, number> = {
+  exploring: 1,
+  tentative: 2,
+  committed: 3,
+}

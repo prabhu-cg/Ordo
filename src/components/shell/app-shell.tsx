@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ItemDrawers } from '@/features/planning/item-drawers'
 import { usePlanningStore } from '@/store/planning-store'
+import { useTemplateStore } from '@/store/template-store'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { ProductFormDrawer } from './product-form-drawer'
 import { SidebarContent } from './sidebar'
@@ -29,6 +30,10 @@ export function AppShell() {
   const navigate = useNavigate()
   const { products, activeProductId, status } = useWorkspaceStore()
   const loadPlanning = usePlanningStore((st) => st.load)
+  const loadTemplates = useTemplateStore((st) => st.load)
+  useEffect(() => {
+    if (status === 'ready') void loadTemplates()
+  }, [status, loadTemplates])
   // Keep the planning data in step with whichever product is open.
   useEffect(() => {
     if (status === 'ready') void loadPlanning(activeProductId)

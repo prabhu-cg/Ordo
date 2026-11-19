@@ -1,4 +1,4 @@
-import * as ToastPrimitive from '@radix-ui/react-toast'
+import { useEffect, useState } from 'react'
 import { CheckCircle2, Info, X, XCircle } from 'lucide-react'
 import { create } from 'zustand'
 import { cn } from '@/lib/utils'
@@ -46,50 +46,71 @@ export const toast = {
 const icons = { success: CheckCircle2, info: Info, destructive: XCircle }
 const iconTone = { success: 'text-success', info: 'text-info', destructive: 'text-destructive' }
 
+/**
+ * Our own toasts, not Radix's. A Radix toast joins the stack of things that react to Escape, and as the newest one
+ * it would take the key before the drawer or dialog you are actually in, so the first Escape would do nothing
+ * useful. These never touch Escape. They still pause while you hover or focus them, and are announced politely.
+ */
 export function Toaster() {
   const { items, dismiss } = useToastStore()
   return (
-    <ToastPrimitive.Provider swipeDirection="right" duration={5000} label="Notifications">
-      {items.map((t) => {
-        const Icon = icons[t.tone]
-        return (
-          <ToastPrimitive.Root
-            key={t.id}
-            type={t.tone === 'destructive' ? 'foreground' : 'background'}
-            duration={t.action ? 8000 : 5000}
-            onOpenChange={(open) => !open && dismiss(t.id)}
-            className="flex items-start gap-3 rounded-menu border border-border-strong bg-popover p-4 shadow-raised data-[state=closed]:animate-toast-out data-[state=open]:animate-toast-in"
-          >
-            <Icon className={cn('mt-0.5 size-4 shrink-0', iconTone[t.tone])} aria-hidden />
-            <div className="min-w-0 flex-1">
-              <ToastPrimitive.Title className="text-body font-semibold text-foreground">
-                {t.title}
-              </ToastPrimitive.Title>
-              {t.description && (
-                <ToastPrimitive.Description className="mt-0.5 text-caption text-muted-foreground">
-                  {t.description}
-                </ToastPrimitive.Description>
-              )}
-            </div>
-            {t.action && (
-              <ToastPrimitive.Action
-                altText={`${t.action.label}: ${t.title}`}
-                onClick={t.action.onClick}
-                className="shrink-0 self-center rounded-full border border-border-strong px-3 py-1 text-label font-semibold text-foreground hover:bg-sand"
-              >
-                {t.action.label}
-              </ToastPrimitive.Action>
-            )}
-            <ToastPrimitive.Close
-              aria-label="Dismiss"
-              className="rounded-full p-1 text-muted-foreground hover:bg-sand hover:text-foreground"
-            >
-              <X className="size-4" aria-hidden />
-            </ToastPrimitive.Close>
-          </ToastPrimitive.Root>
-        )
-      })}
-      <ToastPrimitive.Viewport className="fixed right-4 bottom-4 z-[80] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2 outline-none" />
-    </ToastPrimitive.Provider>
+    <div
+      role="region"
+      aria-label="Notifications"
+      className="pointer-events-none fixed right-4 bottom-4 z-[80] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2"
+    >
+      {items.map((t) => (
+        <ToastCard key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
+      ))}
+    </div>
+  )
+}
+
+function ToastCard({ toast: t, onDismiss }: { toast: ToastItem; onDismiss: () => void }) {
+  const [paused, setPaused] = useState(false)
+  const Icon = icons[t.tone]
+  useEffect(() => {
+    if (paused) return
+    const timer = setTimeout(onDismiss, t.action ? 8000 : 5000)
+    return () => clearTimeout(timer)
+  }, [paused, t.action, onDismiss])
+
+  return (
+    <div
+      role={t.tone === 'destructive' ? 'alert' : 'status'}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+      className="pointer-events-auto flex animate-toast-in items-start gap-3 rounded-menu border border-border-strong bg-popover p-4 shadow-raised"
+    >
+      <Icon className={cn('mt-0.5 size-4 shrink-0', iconTone[t.tone])} aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="text-body font-semibold text-foreground">{t.title}</p>
+        {t.description && (
+          <p className="mt-0.5 text-caption text-muted-foreground">{t.description}</p>
+        )}
+      </div>
+      {t.action && (
+        <button
+          type="button"
+          onClick={() => {
+            t.action!.onClick()
+            onDismiss()
+          }}
+          className="shrink-0 self-center rounded-full border border-border-strong px-3 py-1 text-label font-semibold text-foreground hover:bg-sand"
+        >
+          {t.action.label}
+        </button>
+      )}
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={onDismiss}
+        className="rounded-full p-1 text-muted-foreground hover:bg-sand hover:text-foreground"
+      >
+        <X className="size-4" aria-hidden />
+      </button>
+    </div>
   )
 }

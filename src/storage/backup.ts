@@ -13,6 +13,8 @@ import {
   roadmapSchema,
   roadmapViewSchema,
   tagSchema,
+  templateRecordSchema,
+  migrateWorkItemV1,
 } from '@/domain'
 import { DATA_TABLES, type DataTableName, type OrdoDB } from './db'
 import { guard, StorageError } from './errors'
@@ -30,6 +32,7 @@ const dataSchema = z.object({
   tags: z.array(tagSchema),
   dependencies: z.array(dependencySchema),
   revisions: z.array(revisionSchema),
+  templates: z.array(templateRecordSchema),
 })
 
 export const backupSchema = z.object({
@@ -48,7 +51,19 @@ export type BackupCounts = Record<DataTableName, number>
 export const BACKUP_MIGRATIONS: Record<
   number,
   (data: Record<string, unknown>) => Record<string, unknown>
-> = {}
+> = {
+  // 1 to 2: impact, effort and confidence become words; custom templates are new.
+  1: (data) => {
+    const items = (rows: unknown) =>
+      Array.isArray(rows) ? rows.map((r) => migrateWorkItemV1(r as Record<string, unknown>)) : rows
+    return {
+      ...data,
+      initiatives: items(data.initiatives),
+      features: items(data.features),
+      templates: data.templates ?? [],
+    }
+  },
+}
 
 export function countBackup(backup: BackupFile): BackupCounts {
   return Object.fromEntries(DATA_TABLES.map((t) => [t, backup.data[t].length])) as BackupCounts
@@ -125,6 +140,10 @@ function findIntegrityProblems(data: BackupFile['data']): string[] {
     problems.push('Features refer to a missing initiative')
   if (data.milestones.some((r) => r.initiativeId && !initiatives.has(r.initiativeId)))
     problems.push('Milestones refer to a missing initiative')
+  const endpoint = (type: 'initiative' | 'feature', id: string) =>
+    (type === 'initiative' ? initiatives : features).has(id)
+  if (data.dependencies.some((d) => !endpoint(d.fromType, d.fromId) || !endpoint(d.toType, d.toId)))
+    problems.push('A dependency links to a missing initiative or feature')
   if (data.roadmapViews.some((r) => !roadmaps.has(r.roadmapId)))
     problems.push('Roadmap views refer to a missing roadmap')
   if ([...data.initiatives, ...data.features].some((r) => r.tagIds.some((t) => !tags.has(t))))

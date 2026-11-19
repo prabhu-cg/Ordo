@@ -44,9 +44,9 @@ test.describe('building the hierarchy', () => {
     await id.getByLabel('Initiative', { exact: true }).fill('Private beta')
     await id.getByLabel('Priority').selectOption('high')
     await id.getByLabel('Status').selectOption('planned')
-    await id.getByLabel('Expected impact').selectOption('5')
-    await id.getByLabel('Confidence').selectOption('3')
-    await id.getByLabel('Effort').selectOption('2')
+    await id.getByLabel('Expected impact').selectOption('high')
+    await id.getByLabel('Confidence', { exact: true }).selectOption('tentative')
+    await id.getByLabel('Effort').selectOption('low')
     await id.getByLabel('Owner').fill('Sam')
     await id.getByLabel('Start date').fill('2026-11-01')
     await id.getByLabel('End date').fill('2026-12-01')
@@ -73,8 +73,8 @@ test.describe('building the hierarchy', () => {
       fd.getByLabel('Initiative', { exact: false }).last().locator('option:checked'),
     ).toHaveText('Private beta')
     await fd.getByLabel('Feature', { exact: true }).fill('Invite flow')
-    await fd.getByLabel('Expected impact').selectOption('4')
-    await fd.getByLabel('Effort').selectOption('3')
+    await fd.getByLabel('Expected impact').selectOption('high')
+    await fd.getByLabel('Effort').selectOption('medium')
     await fd.getByPlaceholder('Add a tag').fill('growth') // reuses the existing tag, ignoring case
     await fd.getByRole('button', { name: 'Add', exact: true }).click()
     await fd.getByRole('button', { name: 'Create feature' }).click()
@@ -134,7 +134,7 @@ test.describe('building the hierarchy', () => {
   })
 
   test('editing propagates to every screen without a reload', async ({ page }) => {
-    await createFromTemplate(page, 'solo-maker-launch', 'Solo')
+    await createFromTemplate(page, 'solo-founder', 'Solo')
     await page.getByRole('link', { name: 'Initiatives' }).first().click()
     await page.getByRole('button', { name: 'Build the core workflow' }).click()
     const id = drawer(page, 'Edit initiative')
@@ -152,7 +152,7 @@ test.describe('building the hierarchy', () => {
 
 test.describe('search, filters and sorting', () => {
   test.beforeEach(async ({ page }) => {
-    await createFromTemplate(page, 'saas-mvp', 'Orbit')
+    await createFromTemplate(page, 'startup-mvp', 'Orbit')
     await page.goto('/app/workspace/initiatives')
     await expect(page.getByRole('row')).toHaveCount(6) // header + 5
   })
@@ -185,18 +185,26 @@ test.describe('search, filters and sorting', () => {
   })
 
   test('priority filter, sorting, and the no-results state', async ({ page }) => {
+    // The template gives every initiative an example priority: Build the MVP is critical, Self-serve billing is low.
+    await page.getByLabel('Filter by priority').selectOption('critical')
+    await expect(page.getByRole('row')).toHaveCount(2)
+    await expect(page.getByRole('row', { name: /Build the MVP/ })).toBeVisible()
+    await page.getByRole('button', { name: 'Clear filters' }).click()
+
+    // Raise billing to critical: now two match, and clearing a priority makes "no priority set" find it.
     await page.getByRole('button', { name: 'Self-serve billing' }).click()
     await drawer(page, 'Edit initiative').getByLabel('Priority').selectOption('critical')
     await drawer(page, 'Edit initiative').getByRole('button', { name: 'Save changes' }).click()
-
     await page.getByLabel('Filter by priority').selectOption('critical')
-    await expect(page.getByRole('row')).toHaveCount(2)
+    await expect(page.getByRole('row')).toHaveCount(3)
     await page.getByLabel('Filter by priority').selectOption('none')
-    await expect(page.getByRole('row')).toHaveCount(5)
-    await page.getByRole('button', { name: 'Clear filters' }).click()
+    await expect(page.getByText('No initiatives match')).toBeVisible() // all five have a priority
+    await page.getByRole('button', { name: 'Clear filters' }).last().click()
 
     await page.getByLabel('Sort').selectOption('priority')
-    await expect(page.getByRole('row').nth(1)).toContainText('Self-serve billing')
+    await expect(page.getByRole('row').nth(1)).toContainText('Build the MVP') // critical, and first in manual order
+    await expect(page.getByRole('row').nth(2)).toContainText('Self-serve billing') // also critical
+    await expect(page.getByRole('row').nth(5)).toContainText('Clickable prototype') // medium comes after high
     await page.getByLabel('Sort').selectOption('title')
     await expect(page.getByRole('row').nth(1)).toContainText('Build the MVP')
 
@@ -219,7 +227,7 @@ test.describe('search, filters and sorting', () => {
 
 test.describe('data integrity on delete', () => {
   test.beforeEach(async ({ page }) => {
-    await createFromTemplate(page, 'saas-mvp', 'Orbit')
+    await createFromTemplate(page, 'startup-mvp', 'Orbit')
   })
 
   test('deleting an objective asks what happens to its initiatives: keep them', async ({
@@ -333,7 +341,7 @@ test.describe('empty states and the logo', () => {
 test('planning pages fit a phone: no sideways page scroll, filters fold behind a button', async ({
   page,
 }) => {
-  await createFromTemplate(page, 'saas-mvp', 'Orbit')
+  await createFromTemplate(page, 'startup-mvp', 'Orbit')
   await page.setViewportSize({ width: 390, height: 844 })
   for (const path of [
     '/app/workspace',

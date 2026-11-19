@@ -20,7 +20,7 @@ test.describe('roadmaps', () => {
   test('create several roadmaps with their own settings, from the same plan, without copying anything', async ({
     page,
   }) => {
-    await createFromTemplate(page, 'saas-mvp', 'Orbit')
+    await createFromTemplate(page, 'startup-mvp', 'Orbit')
     await page.goto('/app/roadmaps')
     await expect(page.getByRole('link', { name: 'Roadmap', exact: true })).toBeVisible()
 
@@ -96,7 +96,7 @@ test.describe('roadmaps', () => {
   test('add items: pick what to add, nothing is offered twice, and the empty case is explained', async ({
     page,
   }) => {
-    await createFromTemplate(page, 'saas-mvp', 'Orbit')
+    await createFromTemplate(page, 'startup-mvp', 'Orbit')
     await page.goto('/app/roadmaps')
     await page.getByRole('button', { name: 'New roadmap' }).click()
     await drawer(page, 'New roadmap').getByLabel('Name').fill('Blank')
@@ -140,7 +140,7 @@ test.describe('now, next, later', () => {
       lane(page, 'Now').getByRole('button', { name: /^Customer discovery interviews/ }),
     ).toBeVisible()
     await expect(lane(page, 'Now')).toContainText('In progress')
-    await expect(lane(page, 'Now')).toContainText('Confidence 4/5')
+    await expect(lane(page, 'Now')).toContainText('Committed')
     await expect(lane(page, 'Next')).toContainText('Build the MVP')
     await expect(lane(page, 'Later')).toContainText('Self-serve billing')
     await expect(page.getByText('Columns are yours to set')).toBeVisible()
@@ -186,7 +186,7 @@ test.describe('now, next, later', () => {
       lane(page, 'Now')
         .getByRole('button', { name: /, initiative$/ })
         .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')!.split(',')[0]))
-    expect(await names()).toEqual(['Customer discovery interviews', 'Clickable prototype'])
+    await expect.poll(names).toEqual(['Customer discovery interviews', 'Clickable prototype'])
     await dragTo(
       page,
       card(page, 'Clickable prototype'),
@@ -580,16 +580,20 @@ test.describe('board', () => {
   }) => {
     await page.getByLabel('Group by').selectOption('priority')
     await expect(column(page, 'Critical')).toBeVisible()
+    // The template gives every initiative an example priority, so nothing is without one.
     await expect(
       column(page, 'No priority').getByRole('button', { name: /, initiative$/ }),
-    ).toHaveCount(5)
-    await dragTo(page, card(page, 'Build the MVP'), column(page, 'High').locator('ul'))
+    ).toHaveCount(0)
     await expect(
-      column(page, 'High').getByRole('button', { name: 'Build the MVP, initiative' }),
+      column(page, 'Low').getByRole('button', { name: 'Self-serve billing, initiative' }),
+    ).toBeVisible()
+    await dragTo(page, card(page, 'Self-serve billing'), column(page, 'Critical').locator('ul'))
+    await expect(
+      column(page, 'Critical').getByRole('button', { name: 'Self-serve billing, initiative' }),
     ).toBeVisible()
     await page.getByRole('button', { name: /^Undo: Moved/ }).click()
     await expect(
-      column(page, 'No priority').getByRole('button', { name: 'Build the MVP, initiative' }),
+      column(page, 'Low').getByRole('button', { name: 'Self-serve billing, initiative' }),
     ).toBeVisible()
 
     await page.reload()
@@ -634,7 +638,7 @@ test.describe('board', () => {
     await page.getByRole('button', { name: 'Customise cards' }).click()
     await page.getByRole('menuitemcheckbox', { name: 'Effort' }).click()
     await page.keyboard.press('Escape')
-    await expect(page.getByText(/^Effort \d\/5$/).first()).toBeVisible()
+    await expect(page.getByText(/^Effort (low|medium|high)$/).first()).toBeVisible()
 
     await page.getByLabel('Sort cards by').selectOption('title')
     await expect(page.getByText(/Cards are sorted/)).toBeVisible()
@@ -674,7 +678,7 @@ test.describe('item drawer', () => {
     for (const label of ['Objective', 'Owner', 'Dates', 'Impact', 'Confidence', 'Effort'])
       await expect(d.getByText(label, { exact: true }).first()).toBeVisible()
     await expect(d.getByText('Deliver a usable MVP')).toBeVisible()
-    await expect(d.getByText('3 of 5').first()).toBeVisible()
+    await expect(d.getByText('Tentative').first()).toBeVisible()
 
     await d.getByLabel('Status').selectOption('shipped')
     await expect(d.getByText('Shipped').first()).toBeVisible()
@@ -705,7 +709,7 @@ test.describe('date-based planning', () => {
   test('the column follows the dates, and moving a card changes its dates everywhere', async ({
     page,
   }) => {
-    await createFromTemplate(page, 'saas-mvp', 'Orbit')
+    await createFromTemplate(page, 'startup-mvp', 'Orbit')
     await page.goto('/app/roadmaps')
     await page.getByRole('button', { name: 'New roadmap' }).click()
     await drawer(page, 'New roadmap').getByLabel('Name').fill('By date')

@@ -8,7 +8,7 @@ import type {
   Roadmap,
   RoadmapView,
   Tag,
-} from './v1'
+} from './schema'
 
 /** A record as authored: it has an id but the storage layer owns timestamps and archive state. */
 export type Draft<T> = Omit<T, 'createdAt' | 'updatedAt' | 'deletedAt'>

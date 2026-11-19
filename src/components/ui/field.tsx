@@ -4,6 +4,8 @@ import { Label } from './label'
 
 interface FieldProps {
   label: string
+  /** Sits beside the label but outside it, so it does not become part of the control's accessible name. */
+  labelAddon?: React.ReactNode
   /** Rendered after the label, e.g. "optional". */
   note?: string
   hint?: string
@@ -18,17 +20,20 @@ interface FieldProps {
 }
 
 /** Label + control + hint + error, wired together for assistive tech. */
-export function Field({ label, note, hint, error, className, children }: FieldProps) {
+export function Field({ label, labelAddon, note, hint, error, className, children }: FieldProps) {
   const id = React.useId()
   const hintId = hint ? `${id}-hint` : undefined
   const errorId = error ? `${id}-error` : undefined
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <Label htmlFor={id}>
-        {label}
-        {note && <span className="ml-1.5 font-normal text-muted-foreground">{note}</span>}
-      </Label>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={id}>
+          {label}
+          {note && <span className="ml-1.5 font-normal text-muted-foreground">{note}</span>}
+        </Label>
+        {labelAddon}
+      </div>
       {children({ id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy })}
       {hint && !error && (
         <p id={hintId} className="text-caption text-muted-foreground">
