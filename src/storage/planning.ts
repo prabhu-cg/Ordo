@@ -2,16 +2,18 @@ import {
   TAG_TONES,
   newId,
   nowIso,
+  type Dependency,
   type Feature,
   type Initiative,
   type Milestone,
   type Objective,
   type Roadmap,
+  type RoadmapView,
   type Tag,
 } from '@/domain'
 import { DATA_TABLES, type OrdoDB } from './db'
 import { StorageError, guard } from './errors'
-import type { NewRecord } from './repository'
+import type { NewRecord, RecordPatch } from './repository'
 import type { Repositories } from './repositories'
 
 /**
@@ -31,6 +33,8 @@ export interface PlanningData {
   tags: Tag[]
   roadmaps: Roadmap[]
   milestones: Milestone[]
+  views: RoadmapView[]
+  dependencies: Dependency[]
 }
 
 export type DeleteStrategy = 'unlink' | 'cascade'
@@ -39,6 +43,8 @@ type Owned = 'productId' | 'order'
 export type ObjectiveFields = Omit<NewRecord<Objective>, Owned>
 export type InitiativeFields = Omit<NewRecord<Initiative>, Owned> & { newTags?: string[] }
 export type FeatureFields = Omit<NewRecord<Feature>, Owned> & { newTags?: string[] }
+export type MilestoneFields = Omit<NewRecord<Milestone>, 'productId'>
+export type DependencyFields = Omit<NewRecord<Dependency>, 'productId'>
 
 const fieldError = (field: string, message: string) =>
   new StorageError('VALIDATION', message, { fieldErrors: { [field]: message } })
@@ -167,15 +173,27 @@ export function createPlanning(db: OrdoDB, r: Repositories) {
   return {
     load: (productId: string): Promise<PlanningData> =>
       guard(async () => {
-        const [objectives, initiatives, features, tags, roadmaps, milestones] = await Promise.all([
-          r.objectives.findBy('productId', productId),
-          r.initiatives.findBy('productId', productId),
-          r.features.findBy('productId', productId),
-          r.tags.findBy('productId', productId),
-          r.roadmaps.findBy('productId', productId),
-          r.milestones.findBy('productId', productId),
-        ])
-        return { objectives, initiatives, features, tags, roadmaps, milestones }
+        const [objectives, initiatives, features, tags, roadmaps, milestones, views, dependencies] =
+          await Promise.all([
+            r.objectives.findBy('productId', productId),
+            r.initiatives.findBy('productId', productId),
+            r.features.findBy('productId', productId),
+            r.tags.findBy('productId', productId),
+            r.roadmaps.findBy('productId', productId),
+            r.milestones.findBy('productId', productId),
+            r.roadmapViews.findBy('productId', productId),
+            r.dependencies.findBy('productId', productId),
+          ])
+        return {
+          objectives,
+          initiatives,
+          features,
+          tags,
+          roadmaps,
+          milestones,
+          views,
+          dependencies,
+        }
       }),
 
     saveObjective: (productId: string, fields: ObjectiveFields, id?: string) =>
@@ -278,6 +296,138 @@ export function createPlanning(db: OrdoDB, r: Repositories) {
       atomic(async () => {
         await ownedBy(await r.features.get(id), productId, 'feature')
         await deleteFeatureInTx(productId, id)
+        await touch(productId)
+      }),
+
+    /**
+     * Change some fields of an initiative without resending the rest (a quick edit, a drag, a nudge).
+     * Only the keys present in `patch` change; a key set to undefined clears that field.
+     */
+    patchInitiative: (productId: string, id: string, patch: RecordPatch<Initiative>) =>
+      atomic(async () => {
+        await ownedBy(await r.initiatives.get(id), productId, 'initiative')
+        if (patch.objectiveId) {
+          const o = await r.objectives.get(patch.objectiveId)
+          if (!o || o.productId !== productId)
+            throw fieldError('objectiveId', 'That objective no longer exists.')
+        }
+        const saved = await r.initiatives.update(id, patch)
+        await touch(productId)
+        return saved
+      }),
+
+    patchFeature: (productId: string, id: string, patch: RecordPatch<Feature>) =>
+      atomic(async () => {
+        await ownedBy(await r.features.get(id), productId, 'feature')
+        if (patch.initiativeId) {
+          const i = await r.initiatives.get(patch.initiativeId)
+          if (!i || i.productId !== productId)
+            throw fieldError('initiativeId', 'That initiative no longer exists.')
+        }
+        const saved = await r.features.update(id, patch)
+        await touch(productId)
+        return saved
+      }),
+
+    saveMilestone: (productId: string, fields: MilestoneFields, id?: string) =>
+      atomic(async () => {
+        await requireProduct(productId)
+        if (fields.initiativeId) {
+          const i = await r.initiatives.get(fields.initiativeId)
+          if (!i || i.productId !== productId)
+            throw fieldError('initiativeId', 'That initiative no longer exists.')
+        }
+        let saved: Milestone
+        if (id) {
+          await ownedBy(await r.milestones.get(id), productId, 'milestone')
+          saved = await r.milestones.update(
+            id,
+            replacing<Milestone>(
+              ['title', 'description', 'date', 'status', 'initiativeId'],
+              fields,
+            ),
+          )
+        } else saved = await r.milestones.create({ ...fields, productId })
+        await touch(productId)
+        return saved
+      }),
+
+    deleteMilestone: (productId: string, id: string) =>
+      atomic(async () => {
+        await ownedBy(await r.milestones.get(id), productId, 'milestone')
+        await r.milestones.remove(id)
+        await touch(productId)
+      }),
+
+    /**
+     * "from blocks to": `to` cannot start until `from` is done. Both ends must exist in this product, the same
+     * link cannot be added twice, and a "blocks" link may not close a loop (A blocks B blocks A).
+     */
+    saveDependency: (productId: string, fields: DependencyFields) =>
+      atomic(async () => {
+        await requireProduct(productId)
+        const lookup = (type: 'initiative' | 'feature', id: string) =>
+          type === 'initiative' ? r.initiatives.get(id) : r.features.get(id)
+        const [from, to] = await Promise.all([
+          lookup(fields.fromType, fields.fromId),
+          lookup(fields.toType, fields.toId),
+        ])
+        if (!from || from.productId !== productId)
+          throw fieldError('fromId', 'That item no longer exists.')
+        if (!to || to.productId !== productId)
+          throw fieldError('toId', 'That item no longer exists.')
+
+        const existing = await r.dependencies.findBy('productId', productId)
+        const same = (a: Dependency, b: DependencyFields) =>
+          a.fromType === b.fromType &&
+          a.fromId === b.fromId &&
+          a.toType === b.toType &&
+          a.toId === b.toId
+        const reversed = {
+          ...fields,
+          fromType: fields.toType,
+          fromId: fields.toId,
+          toType: fields.fromType,
+          toId: fields.fromId,
+        }
+        if (
+          existing.some(
+            (d) =>
+              d.kind === fields.kind &&
+              (same(d, fields) || (fields.kind === 'relates' && same(d, reversed))),
+          )
+        ) {
+          throw fieldError('toId', 'That link already exists.')
+        }
+        if (fields.kind === 'blocks') {
+          // Walk what `to` already blocks; reaching `from` would make a loop.
+          const key = (t: string, id: string) => `${t}:${id}`
+          const goal = key(fields.fromType, fields.fromId)
+          const seen = new Set<string>()
+          const queue = [key(fields.toType, fields.toId)]
+          while (queue.length) {
+            const here = queue.pop()!
+            if (here === goal)
+              throw fieldError(
+                'toId',
+                'That would make a loop: the other item already depends on this one.',
+              )
+            if (seen.has(here)) continue
+            seen.add(here)
+            for (const d of existing)
+              if (d.kind === 'blocks' && key(d.fromType, d.fromId) === here)
+                queue.push(key(d.toType, d.toId))
+          }
+        }
+        const saved = await r.dependencies.create({ ...fields, productId })
+        await touch(productId)
+        return saved
+      }),
+
+    deleteDependency: (productId: string, id: string) =>
+      atomic(async () => {
+        await ownedBy(await r.dependencies.get(id), productId, 'link')
+        await r.dependencies.remove(id)
         await touch(productId)
       }),
 

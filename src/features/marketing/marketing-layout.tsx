@@ -52,19 +52,21 @@ export function MarketingLayout() {
         Skip to content
       </a>
       <header className="sticky top-0 z-30 border-b bg-background">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 px-4 sm:px-6">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="md:hidden"
-            onClick={() => setOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu aria-hidden />
-          </Button>
-          <Link to="/" aria-label="Ordo home" className="mr-4 rounded-sm">
-            <Wordmark />
-          </Link>
+        <div className="mx-auto grid h-16 w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-6">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="md:hidden"
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu aria-hidden />
+            </Button>
+            <Link to="/" aria-label="Ordo home" className="rounded-sm">
+              <Wordmark />
+            </Link>
+          </div>
           <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {NAV_LINKS.map((l) => (
               <Link key={l.hash} to={{ pathname: '/', hash: l.hash }} className={linkClass}>
@@ -72,7 +74,7 @@ export function MarketingLayout() {
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="col-start-3 flex items-center justify-end gap-1.5">
             <ThemeToggle />
             <Button asChild variant="ghost" className="hidden sm:inline-flex">
               <Link to="/sign-in">Sign in</Link>
@@ -128,6 +130,7 @@ export function MarketingLayout() {
           <nav aria-label="Footer" className="flex flex-wrap gap-x-2 gap-y-1">
             {(
               [
+                ['About', '/about'],
                 ['Help', '/help'],
                 ['Privacy', '/privacy'],
                 ['Terms', '/terms'],

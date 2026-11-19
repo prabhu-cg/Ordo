@@ -99,8 +99,6 @@ export function resolveTemplate(
         itemType: 'initiative' as const,
         itemId: initiativeIds.get(i.key)!,
         lane: i.lane,
-        startDate: firstOfMonth(anchor, i.months[0]),
-        endDate: lastOfMonth(anchor, i.months[1]),
         order: index + 1,
       })),
     },

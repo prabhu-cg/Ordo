@@ -4,6 +4,7 @@ import { DashboardPage } from '@/features/dashboard/dashboard-page'
 import { DataPage } from '@/features/data/data-page'
 import { ExampleContent, PublicExamplePage } from '@/features/example/example-page'
 import {
+  AboutPage,
   ContactPage,
   HelpPage,
   PrivacyPage,
@@ -15,6 +16,8 @@ import { MarketingLayout } from '@/features/marketing/marketing-layout'
 import { FeaturesPage } from '@/features/planning/features-page'
 import { InitiativesPage } from '@/features/planning/initiatives-page'
 import { ObjectivesPage } from '@/features/planning/objectives-page'
+import { RoadmapPage } from '@/features/roadmap/roadmap-page'
+import { RoadmapsPage } from '@/features/roadmap/roadmaps-page'
 import { NewProductPage } from '@/features/new-product/new-product-page'
 import { NotFoundPage } from '@/features/not-found'
 import { OnboardingPage } from '@/features/onboarding/onboarding-page'
@@ -27,6 +30,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <LandingPage /> },
       { path: 'example', element: <PublicExamplePage /> },
+      { path: 'about', element: <AboutPage /> },
       { path: 'help', element: <HelpPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'terms', element: <TermsPage /> },
@@ -52,6 +56,8 @@ export const routes: RouteObject[] = [
         element: <InitiativesPage />,
         handle: { title: 'Initiatives' },
       },
+      { path: 'roadmaps', element: <RoadmapsPage />, handle: { title: 'Roadmaps' } },
+      { path: 'roadmaps/:roadmapId', element: <RoadmapPage />, handle: { title: 'Roadmap' } },
       { path: 'workspace/features', element: <FeaturesPage />, handle: { title: 'Features' } },
       { path: 'onboarding', element: <OnboardingPage />, handle: { title: 'Guide' } },
       { path: 'example', element: <ExampleContent />, handle: { title: 'Example roadmap' } },

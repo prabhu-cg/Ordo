@@ -73,6 +73,25 @@ export function DropdownMenuRadioItem({
 }
 export const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
 
+/** A setting that is on or off and stays open while you toggle it (for example, which details a card shows). */
+export function DropdownMenuCheckboxItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) {
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      className={cn(itemBase, 'justify-between data-[state=checked]:text-foreground', className)}
+      {...props}
+    >
+      <span className="truncate">{children}</span>
+      <DropdownMenuPrimitive.ItemIndicator>
+        <Check className="!text-primary-text" aria-hidden />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </DropdownMenuPrimitive.CheckboxItem>
+  )
+}
+
 export function DropdownMenuLabel({
   className,
   ...props

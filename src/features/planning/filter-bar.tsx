@@ -18,7 +18,7 @@ interface Props {
   total: number
   searchLabel: string
   statuses: SelectOption[]
-  sorts: readonly SelectOption[]
+  sorts?: readonly SelectOption[]
   showPriority?: boolean
   objectives?: Objective[]
   initiatives?: Initiative[]
@@ -169,18 +169,20 @@ export function FilterBar({
           </Button>
         )}
 
-        <Select
-          aria-label="Sort"
-          className="w-full sm:ml-auto sm:w-auto sm:min-w-48"
-          value={filters.sort}
-          onChange={(e) => onChange('sort', e.target.value)}
-        >
-          {sorts.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
+        {sorts && (
+          <Select
+            aria-label="Sort"
+            className="w-full sm:ml-auto sm:w-auto sm:min-w-48"
+            value={filters.sort}
+            onChange={(e) => onChange('sort', e.target.value)}
+          >
+            {sorts.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        )}
       </div>
       <p
         role="status"

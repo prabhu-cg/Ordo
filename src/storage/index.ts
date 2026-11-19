@@ -9,6 +9,7 @@ import { getStorageInfo } from './info'
 import { createMeta } from './meta'
 import { createPlanning } from './planning'
 import { createRepositories } from './repositories'
+import { createRoadmapService } from './roadmaps'
 
 export function createStorage(db: OrdoDB = new OrdoDB()) {
   const repositories = createRepositories(db)
@@ -16,6 +17,7 @@ export function createStorage(db: OrdoDB = new OrdoDB()) {
     db,
     ...repositories,
     planning: createPlanning(db, repositories),
+    roadmapService: createRoadmapService(db, repositories),
     meta: createMeta(db),
     /** Open the database now so failures surface at startup, not on first write. */
     open: () => guard(async () => void (await db.open())),
@@ -45,11 +47,14 @@ export { requestPersistence, type StorageInfo } from './info'
 export type { NewRecord, RecordPatch, Repository } from './repository'
 export type {
   DeleteStrategy,
+  DependencyFields,
   FeatureFields,
   InitiativeFields,
+  MilestoneFields,
   ObjectiveFields,
   PlanningData,
 } from './planning'
+export type { NewEntry, RoadmapFields } from './roadmaps'
 
 let shared: Storage | undefined
 /** The app-wide storage instance, created on first use. */

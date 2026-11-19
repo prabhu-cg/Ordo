@@ -10,7 +10,9 @@ import {
   laneSchema,
   longText,
   planningHorizonSchema,
+  planningModeSchema,
   prioritySchema,
+  roadmapItemTypeSchema,
   productCategorySchema,
   scoringSchema,
   softDeleteShape,
@@ -141,7 +143,12 @@ export const milestoneSchema = z.object({
 export type Milestone = z.infer<typeof milestoneSchema>
 
 // ── Roadmap ────────────────────────────────────────────────────────────────
-/** Where an initiative or feature sits on a roadmap. It points at the record; it never copies it. */
+/**
+ * Where an initiative or feature sits on a roadmap. It points at the record; it never copies it.
+ * It holds only what is specific to this roadmap: the lane and the order. Dates, status and priority
+ * belong to the initiative or feature itself, so every roadmap and view agrees on them.
+ * (`startDate` and `endDate` are kept for older data and are no longer read or written.)
+ */
 export const roadmapEntrySchema = z
   .object({
     itemType: z.enum(['initiative', 'feature']),
@@ -161,6 +168,12 @@ export const roadmapSchema = z.object({
   name: title(80),
   description: longText().optional(),
   entries: z.array(roadmapEntrySchema),
+  // Added after the first release as optional: older roadmaps and backups remain valid.
+  planningHorizon: planningHorizonSchema.optional(),
+  defaultView: z.enum(['now-next-later', 'timeline', 'board']).optional(),
+  planningMode: planningModeSchema.optional(),
+  /** What this roadmap shows. Absent means initiatives, features and milestones. */
+  itemTypes: z.array(roadmapItemTypeSchema).min(1, 'Show at least one kind of item').optional(),
 })
 export type Roadmap = z.infer<typeof roadmapSchema>
 
@@ -174,7 +187,24 @@ export const roadmapViewSchema = z.object({
   layout: z.enum(VIEW_LAYOUTS),
   config: z
     .object({
-      groupBy: z.enum(['objective', 'status', 'lane', 'tag']).optional(),
+      groupBy: z.enum(['status', 'priority', 'initiative', 'objective', 'lane', 'tag']).optional(),
+      sort: z.enum(['manual', 'priority', 'title', 'updated', 'impact', 'effort']).optional(),
+      /** Which details a board card shows. */
+      cardFields: z
+        .array(
+          z.enum([
+            'priority',
+            'confidence',
+            'owner',
+            'dates',
+            'tags',
+            'objective',
+            'impact',
+            'effort',
+          ]),
+        )
+        .optional(),
+      showDependencies: z.boolean().optional(),
       statuses: z.array(workStatusSchema).optional(),
       tagIds: z.array(idSchema).optional(),
       showMilestones: z.boolean().optional(),

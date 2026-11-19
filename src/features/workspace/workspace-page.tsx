@@ -54,6 +54,7 @@ function Overview({ product }: { product: Product }) {
   const { openEditProduct } = useOutletContext<ShellContext>()
   const archiveProduct = useWorkspaceStore((s) => s.archiveProduct)
   const open = useItemDrawer((s) => s.open)
+  const openRoadmapForm = useItemDrawer((s) => s.openRoadmapForm)
   const { objectives, initiatives, features, roadmaps } = usePlanningStore()
   const [confirmArchive, setConfirmArchive] = useState(false)
 
@@ -308,13 +309,23 @@ function Overview({ product }: { product: Product }) {
             className="mt-4"
             icon={<Layers />}
             title="No roadmap yet"
-            description="Building roadmaps arrives in a later phase. What you plan here will be ready to place on one."
+            description="A roadmap picks items from your plan and shows them now, next, later; on a timeline; and on a board."
+            action={
+              <Button variant="outline" onClick={() => openRoadmapForm()}>
+                <Plus aria-hidden /> Create a roadmap
+              </Button>
+            }
           />
         ) : (
           <ul className="mt-4 divide-y border-y">
             {roadmaps.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-4 py-3.5">
-                <span className="text-title font-semibold text-foreground">{r.name}</span>
+                <Link
+                  to={`/app/roadmaps/${r.id}`}
+                  className="rounded-sm text-title font-semibold text-foreground hover:text-primary-text hover:underline hover:underline-offset-4"
+                >
+                  {r.name}
+                </Link>
                 <span className="text-caption text-muted-foreground tabular-nums">
                   {pluralise(r.entries.length, 'item')} · Updated {formatDate(r.updatedAt)}
                 </span>

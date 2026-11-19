@@ -143,7 +143,8 @@ const STEPS = [
         >
           See all three on the example roadmap
         </Link>
-        . It is read-only and never changes your own products.
+        . It is read-only and never changes your own products. When you are ready, make your own
+        from the Roadmaps page.
       </p>
     ),
   },

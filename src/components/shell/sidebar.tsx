@@ -3,6 +3,7 @@ import {
   HardDrive,
   Home,
   Layers,
+  Map as MapIcon,
   ListChecks,
   Palette,
   Presentation,
@@ -22,7 +23,7 @@ interface NavItem {
   icon: LucideIcon
   end?: boolean
   /** Show how many of these the open product has. */
-  count?: 'objectives' | 'initiatives' | 'features'
+  count?: 'objectives' | 'initiatives' | 'features' | 'roadmaps'
 }
 
 const HOME: NavItem[] = [{ to: '/app', label: 'Dashboard', icon: Home, end: true }]
@@ -31,6 +32,7 @@ const PLAN: NavItem[] = [
   { to: '/app/workspace/objectives', label: 'Objectives', icon: Target, count: 'objectives' },
   { to: '/app/workspace/initiatives', label: 'Initiatives', icon: Boxes, count: 'initiatives' },
   { to: '/app/workspace/features', label: 'Features', icon: ListChecks, count: 'features' },
+  { to: '/app/roadmaps', label: 'Roadmaps', icon: MapIcon, count: 'roadmaps' },
 ]
 const LEARN: NavItem[] = [
   { to: '/app/onboarding', label: 'Guide', icon: Sparkles },

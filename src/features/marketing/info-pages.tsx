@@ -148,3 +148,69 @@ export function SignInPage() {
     </div>
   )
 }
+
+const STACK: [string, string][] = [
+  ['Interface', 'React and TypeScript, built with Vite'],
+  ['Styling', 'Tailwind CSS, with accessible components built on Radix'],
+  ['State', 'Zustand'],
+  ['Storage', 'IndexedDB through Dexie, in your browser'],
+  ['Validation', 'Zod, on every write and every restored backup'],
+  ['Drag and drop', 'dnd-kit'],
+  ['Testing', 'Vitest and Playwright'],
+]
+
+export function AboutPage() {
+  return (
+    <InfoPage title="About Ordo" intro="Plan better. Build smarter">
+      <h2 className="font-sans">What it is</h2>
+      <p>
+        Ordo is a product roadmap builder for people who plan with small teams: solo founders,
+        freelancers and consultants, startup founders and small product teams. You write down
+        objectives, break them into initiatives and features, score what matters, and show the plan
+        as now, next and later; as a timeline; or as a board. The three views read one set of
+        records, so a change in one shows in the others.
+      </p>
+      <p>
+        It is local-first. Your work is saved in your browser, there is no account to make, and
+        nothing is uploaded. You can back everything up as a file and restore it anywhere.
+      </p>
+
+      <h2 className="font-sans">How it is built</h2>
+      <dl className="mt-3 divide-y border-y">
+        {STACK.map(([label, value]) => (
+          <div key={label} className="grid gap-1 py-2.5 sm:grid-cols-[10rem_1fr] sm:gap-4">
+            <dt className="text-body font-semibold text-foreground">{label}</dt>
+            <dd className="text-body">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p>
+        There is no server for your data and no AI in this version. Data has a versioned format with
+        migrations, so your backups keep working as Ordo changes.
+      </p>
+
+      <h2 className="font-sans">What is live, and what is next</h2>
+      <p>
+        Live today: <Link to="/app/new">products</Link> with objectives, measurable outcomes,
+        initiatives and features; search, filters and sorting; roadmaps in three views with drag and
+        drop, dependencies, milestones and undo; templates and an example roadmap; and{' '}
+        <Link to="/app/data">backup and restore</Link>.
+      </p>
+      <p>
+        Not built yet: sharing a roadmap as an image or PDF, accounts, and syncing between devices
+        or live collaboration. If that changes, this page will say so.
+      </p>
+
+      <h2 className="font-sans">Who built it, and why</h2>
+      <p>
+        Ordo is an early version. It aims to make planning a product simpler than traditional
+        product management software: no account to make and nothing to set up before you can start,
+        with your plan kept on your own device.
+      </p>
+      <p>
+        No contact address has been published yet. The <Link to="/contact">Contact</Link> page will
+        list one when there is somewhere to write to.
+      </p>
+    </InfoPage>
+  )
+}

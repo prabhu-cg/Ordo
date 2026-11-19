@@ -214,9 +214,9 @@ function Features() {
           ))}
         </div>
         <Alert tone="info" title="Where Ordo is today" className="mt-14 max-w-3xl">
-          You can create a product, start from a template and explore the sample views. Adding your
-          own objectives, initiatives and features, and building a roadmap in each view, is the next
-          stage of development.
+          You can plan objectives, initiatives and features, then build roadmaps in all three views,
+          with drag and drop and undo. Sharing a roadmap as an image or PDF is not built yet, and
+          everything stays in your own browser.
         </Alert>
       </div>
     </section>
@@ -322,8 +322,8 @@ function Audience() {
 }
 
 const INCLUDED = [
-  'Create products and start from a template',
-  'Explore the sample roadmap in three views',
+  'Plan objectives, initiatives and features',
+  'Build several roadmaps in three views',
   'Back up and restore everything as a file',
   'Your data stays in your browser',
   'No account and no card',

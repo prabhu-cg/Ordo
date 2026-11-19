@@ -9,7 +9,17 @@ import {
   type PlanningData,
   type StorageError,
 } from '@/storage'
-import type { Feature, Initiative, Milestone, Objective, Roadmap, Tag } from '@/domain'
+import type {
+  Dependency,
+  Feature,
+  Initiative,
+  Milestone,
+  Objective,
+  Roadmap,
+  RoadmapView,
+  Tag,
+} from '@/domain'
+import { useUndoStore } from './undo-store'
 import { useWorkspaceStore } from './workspace-store'
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
@@ -25,9 +35,13 @@ interface PlanningState {
   tags: Tag[]
   roadmaps: Roadmap[]
   milestones: Milestone[]
+  views: RoadmapView[]
+  dependencies: Dependency[]
 
   load: (productId: string | undefined) => Promise<void>
   reload: () => Promise<void>
+  /** Re-read this product's records and tell the rest of the app its "last modified" moved. Call after any write. */
+  commit: () => Promise<void>
 
   saveObjective: (fields: ObjectiveFields, id?: string) => Promise<Objective>
   saveInitiative: (fields: InitiativeFields, id?: string) => Promise<Initiative>
@@ -44,6 +58,8 @@ const EMPTY = {
   tags: [],
   roadmaps: [],
   milestones: [],
+  views: [],
+  dependencies: [],
 }
 const byOrder = <T extends { order: number }>(rows: T[]) =>
   [...rows].sort((a, b) => a.order - b.order)
@@ -57,6 +73,8 @@ function shape(data: PlanningData) {
     tags: liveRows(data.tags).sort((a, b) => a.name.localeCompare(b.name)),
     roadmaps: liveRows(data.roadmaps),
     milestones: liveRows(data.milestones),
+    views: [...data.views].sort((a, b) => a.order - b.order),
+    dependencies: data.dependencies,
   }
 }
 
@@ -85,12 +103,15 @@ export const usePlanningStore = create<PlanningState>((set, get) => {
 
     async load(productId) {
       if (!productId) {
+        useUndoStore.getState().clear()
         set({ productId: undefined, status: 'idle', error: undefined, ...EMPTY })
         return
       }
       // Switching product: drop the old product's records immediately so they are never shown against the new one.
-      if (get().productId !== productId)
+      if (get().productId !== productId) {
+        useUndoStore.getState().clear() // an undo belongs to the product it was made in
         set({ productId, status: 'loading', error: undefined, ...EMPTY })
+      }
       try {
         const data = await getStorage().planning.load(productId)
         if (get().productId !== productId) return // the user switched again while this was loading
@@ -98,6 +119,10 @@ export const usePlanningStore = create<PlanningState>((set, get) => {
       } catch (e) {
         if (get().productId === productId) set({ status: 'error', error: toStorageError(e) })
       }
+    },
+
+    async commit() {
+      await afterWrite()
     },
 
     async reload() {

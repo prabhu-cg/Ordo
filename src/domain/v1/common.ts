@@ -98,3 +98,12 @@ export const HORIZON_MONTHS: Record<PlanningHorizon, number> = {
 export const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const
 export const prioritySchema = z.enum(PRIORITIES)
 export type Priority = z.infer<typeof prioritySchema>
+
+/** Flexible: lanes are yours to set and dates are optional. Dates: the lane follows each item's dates. */
+export const PLANNING_MODES = ['flexible', 'dates'] as const
+export const planningModeSchema = z.enum(PLANNING_MODES)
+export type PlanningMode = z.infer<typeof planningModeSchema>
+
+export const ROADMAP_ITEM_TYPES = ['initiative', 'feature', 'milestone'] as const
+export const roadmapItemTypeSchema = z.enum(ROADMAP_ITEM_TYPES)
+export type RoadmapItemType = z.infer<typeof roadmapItemTypeSchema>

@@ -70,6 +70,39 @@ test.describe('landing page', () => {
     await expect(page.getByRole('button', { name: /pay|subscribe|checkout|buy/i })).toHaveCount(0)
   })
 
+  test('the main navigation is centred in the header, with the logo left and actions right', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
+    const box = async (loc: ReturnType<typeof page.locator>) => (await loc.boundingBox())!
+    const nav = await box(page.getByRole('navigation', { name: 'Main' }))
+    const header = await box(page.getByRole('banner'))
+    const logo = await box(page.getByRole('link', { name: 'Ordo home' }))
+    const action = await box(page.getByRole('banner').getByRole('link', { name: 'Get started' }))
+    expect(Math.abs(nav.x + nav.width / 2 - (header.x + header.width / 2))).toBeLessThan(2)
+    expect(logo.x).toBeLessThan(nav.x)
+    expect(action.x).toBeGreaterThan(nav.x + nav.width)
+  })
+
+  test('the About page covers what it is, how it is built, what is live, and who built it', async ({
+    page,
+  }) => {
+    await page.goto('/about')
+    await expect(page.getByRole('heading', { level: 1, name: 'About Ordo' })).toBeVisible()
+    for (const h of [
+      'What it is',
+      'How it is built',
+      'What is live, and what is next',
+      'Who built it, and why',
+    ]) {
+      await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible()
+    }
+    await expect(page.getByText('IndexedDB through Dexie')).toBeVisible()
+    await page.getByRole('link', { name: 'Contact', exact: true }).first().click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Contact' })).toBeVisible()
+  })
+
   test('FAQ opens and the product preview switches views', async ({ page }) => {
     await page.goto('/')
     const item = page.locator('details', { hasText: 'Where is my data stored?' })

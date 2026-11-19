@@ -2,7 +2,7 @@
 
 A local-first product roadmap builder. **Plan better. Build smarter**
 
-Built so far: foundation (shell, design system, versioned data model, IndexedDB storage), the public landing page and onboarding, and the product planning workspace (objectives with measurable outcomes, initiatives, features, search and filters, integrity-checked deletes). Building roadmaps in the three views is the next stage.
+Built so far: foundation (shell, design system, versioned data model, IndexedDB storage), the public landing page and onboarding, and the product planning workspace (objectives with measurable outcomes, initiatives, features, search and filters, integrity-checked deletes). Roadmaps in three views (now/next/later, timeline, board) with drag and drop, undo and dependencies. Image/PDF export is not built yet.
 
 ## Commands
 
@@ -33,6 +33,7 @@ src/
   store/               Zustand: workspace (products) and theme
   features/            marketing, dashboard, new-product, onboarding, example,
                        workspace (overview), planning (objectives, initiatives, features),
+                       roadmap (list, three views, drawers, engine, actions),
                        data (backup/restore), design-system pages
   templates/           Read-only starter templates and the resolver that copies one into a product
   lib/                 utils, date formatting, useStorageQuery

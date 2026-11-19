@@ -46,3 +46,21 @@ Enforced in `storage/planning.ts`, inside one transaction per operation:
 - Deleting an initiative or feature also removes its roadmap entries and dependencies, and unlinks any milestone attached to it.
 - Any change moves the product's `updatedAt`, so the dashboard's "last modified" is true.
 - Deletions are soft (archived with `deletedAt`) and each change is recorded as a Revision.
+
+## Roadmaps: one shared model
+
+A roadmap is `entries`: a list of references to initiatives and features. The three views (now/next/later, timeline, board) are only different drawings of that one list, so no view has data of its own and nothing is copied.
+
+| What                                                    | Where it lives                                                                      | Why                                                                                |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Which items are on the roadmap, their order, their lane | the roadmap's `entries`                                                             | the only roadmap-specific facts                                                    |
+| Start and end dates                                     | the initiative or feature itself                                                    | so editing dates in a drawer, dragging a bar, or a form all agree on every roadmap |
+| Status, priority, parent initiative                     | the item itself                                                                     | so a board drop, a quick edit and the planning pages agree                         |
+| Board grouping, sort, card fields, timeline zoom        | the roadmap's `RoadmapView.config`                                                  | a view's own preferences                                                           |
+| Milestones                                              | the product's milestones (shown when the roadmap's `itemTypes` includes milestones) | they can stand alone or link to an initiative                                      |
+
+`entry.startDate` and `entry.endDate` are kept in the schema for older data and are no longer read or written.
+
+**An item may be on a roadmap once** (enforced), and on any number of roadmaps. **Planning mode:** `flexible` means lanes are set by hand and dates are optional; `dates` means the lane follows each item's dates (now = this month and next, next = the three months after, later = beyond; undated items keep their stored lane) and moving a dated card to another column moves its dates. **Item types** only hide a kind in this roadmap; entries are kept.
+
+**Dependencies:** `fromType/fromId blocks toType/toId`, or `relates`. Both ends must exist in the product, a link cannot be added twice (a "relates" link counts the same in either direction), and a "blocks" link cannot close a loop.

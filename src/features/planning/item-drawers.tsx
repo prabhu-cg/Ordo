@@ -1,12 +1,17 @@
 import { Drawer, DrawerContent } from '@/components/ui/drawer'
+import { AddItemsDrawer } from '@/features/roadmap/add-items-drawer'
+import { MilestoneForm } from '@/features/roadmap/milestone-form'
+import { RoadmapForm } from '@/features/roadmap/roadmap-form'
+import { RoadmapItemDrawer } from '@/features/roadmap/roadmap-item-drawer'
 import { useItemDrawer } from '@/store/drawer-store'
 import { DeleteDialog } from './delete-dialogs'
 import { ItemForm } from './item-form'
 import { ObjectiveForm } from './objective-form'
 
-/** Mounted once in the app shell. Any page opens a drawer through `useItemDrawer().open(...)`. */
+/** Mounted once in the app shell. Any page opens a drawer through `useItemDrawer()`. */
 export function ItemDrawers() {
-  const { target, close } = useItemDrawer()
+  const s = useItemDrawer()
+  const { target, close } = s
   const key = target
     ? `${target.kind}:${target.id ?? 'new'}:${target.preset?.objectiveId ?? ''}:${target.preset?.initiativeId ?? ''}`
     : 'closed'
@@ -20,6 +25,36 @@ export function ItemDrawers() {
           )}
         </DrawerContent>
       </Drawer>
+
+      <Drawer open={Boolean(s.item)} onOpenChange={(o) => !o && s.closeRoadmapItem()}>
+        <DrawerContent size="xl">
+          {s.item && (
+            <RoadmapItemDrawer
+              key={`${s.item.roadmapId}:${s.item.itemType}:${s.item.itemId}`}
+              {...s.item}
+            />
+          )}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={Boolean(s.add)} onOpenChange={(o) => !o && s.closeAddItems()}>
+        <DrawerContent size="lg">
+          {s.add && <AddItemsDrawer key={`${s.add.roadmapId}:${s.add.lane ?? ''}`} {...s.add} />}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={Boolean(s.form)} onOpenChange={(o) => !o && s.closeRoadmapForm()}>
+        <DrawerContent size="lg">
+          {s.form && <RoadmapForm key={s.form.id ?? 'new'} id={s.form.id} />}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={Boolean(s.milestone)} onOpenChange={(o) => !o && s.closeMilestone()}>
+        <DrawerContent>
+          {s.milestone && <MilestoneForm key={s.milestone.id ?? 'new'} {...s.milestone} />}
+        </DrawerContent>
+      </Drawer>
+
       <DeleteDialog />
     </>
   )

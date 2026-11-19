@@ -4,11 +4,16 @@ import { create } from 'zustand'
 import { cn } from '@/lib/utils'
 
 type Tone = 'success' | 'info' | 'destructive'
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
 interface ToastItem {
   id: number
   title: string
   description?: string
   tone: Tone
+  action?: ToastAction
 }
 interface ToastStore {
   items: ToastItem[]
@@ -19,14 +24,19 @@ interface ToastStore {
 let nextId = 1
 const useToastStore = create<ToastStore>((set) => ({
   items: [],
-  push: (t) => set((s) => ({ items: [...s.items, { ...t, id: nextId++ }].slice(-4) })),
+  // Only the newest change can be undone from a toast, so a new undoable toast replaces the older ones
+  // instead of stacking up over the page.
+  push: (t) =>
+    set((s) => ({
+      items: [...s.items.filter((i) => !(t.action && i.action)), { ...t, id: nextId++ }].slice(-4),
+    })),
   dismiss: (id) => set((s) => ({ items: s.items.filter((i) => i.id !== id) })),
 }))
 
 /** Confirmation messages that don't need a decision. Call from anywhere. */
 export const toast = {
-  success: (title: string, description?: string) =>
-    useToastStore.getState().push({ title, description, tone: 'success' }),
+  success: (title: string, description?: string, action?: ToastAction) =>
+    useToastStore.getState().push({ title, description, tone: 'success', action }),
   info: (title: string, description?: string) =>
     useToastStore.getState().push({ title, description, tone: 'info' }),
   error: (title: string, description?: string) =>
@@ -46,6 +56,7 @@ export function Toaster() {
           <ToastPrimitive.Root
             key={t.id}
             type={t.tone === 'destructive' ? 'foreground' : 'background'}
+            duration={t.action ? 8000 : 5000}
             onOpenChange={(open) => !open && dismiss(t.id)}
             className="flex items-start gap-3 rounded-menu border border-border-strong bg-popover p-4 shadow-raised data-[state=closed]:animate-toast-out data-[state=open]:animate-toast-in"
           >
@@ -60,6 +71,15 @@ export function Toaster() {
                 </ToastPrimitive.Description>
               )}
             </div>
+            {t.action && (
+              <ToastPrimitive.Action
+                altText={`${t.action.label}: ${t.title}`}
+                onClick={t.action.onClick}
+                className="shrink-0 self-center rounded-full border border-border-strong px-3 py-1 text-label font-semibold text-foreground hover:bg-sand"
+              >
+                {t.action.label}
+              </ToastPrimitive.Action>
+            )}
             <ToastPrimitive.Close
               aria-label="Dismiss"
               className="rounded-full p-1 text-muted-foreground hover:bg-sand hover:text-foreground"
