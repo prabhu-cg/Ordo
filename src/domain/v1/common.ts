@@ -94,3 +94,7 @@ export const HORIZON_MONTHS: Record<PlanningHorizon, number> = {
   '12-months': 12,
   '2-years': 24,
 }
+
+export const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const
+export const prioritySchema = z.enum(PRIORITIES)
+export type Priority = z.infer<typeof prioritySchema>

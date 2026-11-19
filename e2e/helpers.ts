@@ -10,3 +10,15 @@ export async function createProduct(page: Page, name: string, extra: { tagline?:
   await page.getByRole('button', { name: 'Create product' }).click()
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
 }
+
+export async function createFromTemplate(page: Page, templateId: string, name: string) {
+  await page.goto(`/app/new?template=${templateId}`)
+  await page.getByRole('button', { name: 'Next' }).click()
+  await page.getByLabel('Product name').fill(name)
+  await page.getByRole('button', { name: 'Next' }).click()
+  await page.getByRole('button', { name: 'Create product' }).click()
+  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+}
+
+/** The open item drawer (a right-hand dialog). */
+export const drawer = (page: Page, name: RegExp | string) => page.getByRole('dialog', { name })

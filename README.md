@@ -2,7 +2,7 @@
 
 A local-first product roadmap builder. **Plan better. Build smarter**
 
-Phase 0 (foundation) is complete: app shell, design system, versioned data model and IndexedDB storage. Roadmap features arrive in later phases.
+Built so far: foundation (shell, design system, versioned data model, IndexedDB storage), the public landing page and onboarding, and the product planning workspace (objectives with measurable outcomes, initiatives, features, search and filters, integrity-checked deletes). Building roadmaps in the three views is the next stage.
 
 ## Commands
 
@@ -31,7 +31,10 @@ src/
     backup.ts          Export, validate, migrate, restore
     errors.ts          StorageError and mapping from raw failures
   store/               Zustand: workspace (products) and theme
-  features/            workspace, data (backup/restore), design-system pages
+  features/            marketing, dashboard, new-product, onboarding, example,
+                       workspace (overview), planning (objectives, initiatives, features),
+                       data (backup/restore), design-system pages
+  templates/           Read-only starter templates and the resolver that copies one into a product
   lib/                 utils, date formatting, useStorageQuery
 e2e/                   Playwright specs
 docs/                  Architecture, data model, database, design system

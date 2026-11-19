@@ -13,3 +13,9 @@ Tokens follow Doxa's "White Paper on a Butter Desk" (github.com/prabhu-cg/Doxa, 
 Components (`src/components/ui`): Button, Input, Textarea, Select (native), Label, Field, Badge, Card, Tabs, Tooltip, DropdownMenu, Dialog, ConfirmDialog, Drawer, EmptyState, Alert, Toast, Skeleton.
 
 Ordo's wordmark is the text "Ordo" in the display serif with the tagline "Plan better. Build smarter" (placeholder until a mark exists).
+
+## Logo
+
+`public/ordo-logo.svg` is the supplied mark (a ring with an amber swoosh). The app renders it inline (`components/shell/logo-mark.tsx`, paths unchanged) so the ring follows the theme's foreground colour and stays visible in dark mode; the swoosh keeps its authored colour (`--logo-accent`). `public/favicon.svg` is the same paths with a `prefers-color-scheme` rule that lightens the ring on dark browser chrome.
+
+`cn()` (`lib/utils.ts`) is configured with our custom font-size, radius and shadow tokens. Without that, tailwind-merge mistakes `text-body` for a colour and drops the variant's real text colour.

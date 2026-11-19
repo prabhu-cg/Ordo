@@ -186,10 +186,10 @@ test.describe('product creation', () => {
     await page.getByRole('button', { name: 'Create product' }).click()
     await expect(page.getByRole('heading', { level: 1, name: 'Orbit' })).toBeVisible()
     const row = (label: string) => page.getByRole('row', { name: new RegExp(`^${label}`) })
-    await expect(row('Objectives')).toContainText('3')
+    await expect(page.getByRole('heading', { name: /^Objectives\s*3/ })).toBeVisible()
     await expect(row('Initiatives')).toContainText('5')
     await expect(row('Features')).toContainText('11')
-    await expect(row('Roadmaps')).toContainText('1')
+    await expect(page.getByRole('heading', { name: /^Roadmaps\s*1/ })).toBeVisible()
 
     // Survives a reload and shows on the dashboard with one roadmap.
     await page.reload()

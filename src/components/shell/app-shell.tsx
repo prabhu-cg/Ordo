@@ -1,10 +1,12 @@
 import { Menu } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useMatches, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from '@/components/ui/drawer'
 import { Toaster } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ItemDrawers } from '@/features/planning/item-drawers'
+import { usePlanningStore } from '@/store/planning-store'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { ProductFormDrawer } from './product-form-drawer'
 import { SidebarContent } from './sidebar'
@@ -25,7 +27,12 @@ export function AppShell() {
   const [navOpen, setNavOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const navigate = useNavigate()
-  const { products, activeProductId } = useWorkspaceStore()
+  const { products, activeProductId, status } = useWorkspaceStore()
+  const loadPlanning = usePlanningStore((st) => st.load)
+  // Keep the planning data in step with whichever product is open.
+  useEffect(() => {
+    if (status === 'ready') void loadPlanning(activeProductId)
+  }, [status, activeProductId, loadPlanning])
   const active = products.find((p) => p.id === activeProductId)
   const matches = useMatches()
   const title = [...matches].reverse().find((m) => (m.handle as RouteHandle | undefined)?.title)
@@ -104,6 +111,7 @@ export function AppShell() {
         onOpenChange={(o) => !o && setEditingId(null)}
         product={editing}
       />
+      <ItemDrawers />
       <Toaster />
     </TooltipProvider>
   )

@@ -81,7 +81,7 @@ function Hero() {
               <div className="overflow-hidden rounded-[14px] bg-background sm:rounded-[16px]">
                 <div className="flex items-center justify-between gap-3 border-b bg-surface px-4 py-3 sm:px-5">
                   <div className="flex min-w-0 items-center gap-3">
-                    <Wordmark className="[&_span]:text-xl" />
+                    <Wordmark className="[&_.font-display]:text-xl [&_svg]:size-5" />
                     <span aria-hidden className="h-5 w-px bg-border-strong" />
                     <span className="truncate text-body font-semibold text-foreground">
                       {bundle.product.name}

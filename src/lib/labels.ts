@@ -1,4 +1,4 @@
-import type { Lane, PlanningHorizon, ProductCategory, WorkStatus } from '@/domain'
+import type { Lane, PlanningHorizon, Priority, ProductCategory, WorkStatus } from '@/domain'
 
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   saas: 'Software as a service',
@@ -40,3 +40,27 @@ export const STATUS_BADGE: Record<
 }
 
 export const LANE_LABELS: Record<Lane, string> = { now: 'Now', next: 'Next', later: 'Later' }
+
+export const PRIORITY_LABELS: Record<Priority, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
+}
+export const PRIORITY_BADGE: Record<Priority, 'secondary' | 'info' | 'warning' | 'destructive'> = {
+  low: 'secondary',
+  medium: 'info',
+  high: 'warning',
+  critical: 'destructive',
+}
+
+export const OBJECTIVE_STATUS_LABELS = {
+  active: 'Active',
+  achieved: 'Achieved',
+  dropped: 'Dropped',
+} as const
+export const OBJECTIVE_STATUS_BADGE = {
+  active: 'soft',
+  achieved: 'success',
+  dropped: 'secondary',
+} as const

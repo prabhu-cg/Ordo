@@ -25,8 +25,24 @@ Product ─┬─ Objective ── Initiative ── Feature
 | Dependency  | no   | productId, fromType/fromId, toType/toId, kind (blocks/relates), note?                                  |
 | Revision    | –    | productId, entityType, entityId, action, snapshot, createdAt                                           |
 
+**Outcomes** (embedded in an Objective): `{ id, title, metric?, unit?, baseline, target, current }`. The target must differ from the baseline. Progress is derived, never stored: `(current - baseline) / (target - baseline)` clamped to 0..1 (so targets below the baseline work), and an objective's progress is the average of its outcomes (`domain/progress.ts`).
+
+**Priority:** low, medium, high, critical.
+
+Fields added after the first release (`category`, `planningHorizon`, `outcomes`, `priority`, `owner`) are optional, so older records and backups remain valid and no migration was needed.
+
 Work status: idea, planned, in-progress, shipped, paused, dropped. Scoring: impact, confidence, effort, each 1–5.
 
 Rules enforced by schema: names required and trimmed; length caps; end date not before start date; a dependency cannot point at itself. Parent links are optional so strategy can be added progressively.
 
 **Changing the schema:** add a `DbVersion` in `storage/migrations.ts`, bump `SCHEMA_VERSION`, add a `BACKUP_MIGRATIONS[n]` step, add tests.
+
+## Keeping the hierarchy valid
+
+Enforced in `storage/planning.ts`, inside one transaction per operation:
+
+- A child may only point at a parent that exists, is not archived, and belongs to the same product (`objectiveId`, `initiativeId`, tag ids). Otherwise the save fails with a field error and nothing is written.
+- Deleting an objective or initiative that has children requires choosing **unlink** (children stay, with no parent; the default) or **cascade** (children are deleted too). No live record is ever left pointing at a deleted parent.
+- Deleting an initiative or feature also removes its roadmap entries and dependencies, and unlinks any milestone attached to it.
+- Any change moves the product's `updatedAt`, so the dashboard's "last modified" is true.
+- Deletions are soft (archived with `deletedAt`) and each change is recorded as a Revision.

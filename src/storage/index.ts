@@ -7,12 +7,15 @@ import { exportBackup, restoreBackup, type BackupFile } from './backup'
 import { guard } from './errors'
 import { getStorageInfo } from './info'
 import { createMeta } from './meta'
+import { createPlanning } from './planning'
 import { createRepositories } from './repositories'
 
 export function createStorage(db: OrdoDB = new OrdoDB()) {
+  const repositories = createRepositories(db)
   return {
     db,
-    ...createRepositories(db),
+    ...repositories,
+    planning: createPlanning(db, repositories),
     meta: createMeta(db),
     /** Open the database now so failures surface at startup, not on first write. */
     open: () => guard(async () => void (await db.open())),
@@ -40,6 +43,13 @@ export {
 export { META_KEYS } from './meta'
 export { requestPersistence, type StorageInfo } from './info'
 export type { NewRecord, RecordPatch, Repository } from './repository'
+export type {
+  DeleteStrategy,
+  FeatureFields,
+  InitiativeFields,
+  ObjectiveFields,
+  PlanningData,
+} from './planning'
 
 let shared: Storage | undefined
 /** The app-wide storage instance, created on first use. */

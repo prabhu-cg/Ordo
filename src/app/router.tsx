@@ -12,6 +12,9 @@ import {
 } from '@/features/marketing/info-pages'
 import { LandingPage } from '@/features/marketing/landing-page'
 import { MarketingLayout } from '@/features/marketing/marketing-layout'
+import { FeaturesPage } from '@/features/planning/features-page'
+import { InitiativesPage } from '@/features/planning/initiatives-page'
+import { ObjectivesPage } from '@/features/planning/objectives-page'
 import { NewProductPage } from '@/features/new-product/new-product-page'
 import { NotFoundPage } from '@/features/not-found'
 import { OnboardingPage } from '@/features/onboarding/onboarding-page'
@@ -38,7 +41,18 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage />, handle: { title: 'Dashboard' } },
       { path: 'new', element: <NewProductPage />, handle: { title: 'New product' } },
-      { path: 'workspace', element: <WorkspacePage />, handle: { title: 'Workspace' } },
+      { path: 'workspace', element: <WorkspacePage />, handle: { title: 'Overview' } },
+      {
+        path: 'workspace/objectives',
+        element: <ObjectivesPage />,
+        handle: { title: 'Objectives' },
+      },
+      {
+        path: 'workspace/initiatives',
+        element: <InitiativesPage />,
+        handle: { title: 'Initiatives' },
+      },
+      { path: 'workspace/features', element: <FeaturesPage />, handle: { title: 'Features' } },
       { path: 'onboarding', element: <OnboardingPage />, handle: { title: 'Guide' } },
       { path: 'example', element: <ExampleContent />, handle: { title: 'Example roadmap' } },
       { path: 'data', element: <DataPage />, handle: { title: 'Data and backup' } },

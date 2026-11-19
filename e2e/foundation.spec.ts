@@ -16,10 +16,10 @@ test('create, survive reload, edit, archive and restore a product', async ({ pag
   await page.getByRole('button', { name: 'More actions' }).click()
   await page.getByRole('menuitem', { name: 'Archive product' }).click()
   await page.getByRole('button', { name: 'Archive product' }).click()
-  await expect(page.getByRole('heading', { name: 'Workspace' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible()
   await page.getByRole('link', { name: 'Data and backup' }).first().click()
   await page.getByRole('button', { name: 'Restore', exact: true }).click()
-  await page.getByRole('link', { name: 'Workspace' }).first().click()
+  await page.getByRole('link', { name: 'Overview' }).first().click()
   await expect(page.getByRole('heading', { level: 1, name: 'Atlas 2' })).toBeVisible()
 })
 
@@ -34,13 +34,11 @@ test('backup downloads and restore replaces data; invalid files are rejected', a
   expect(download.suggestedFilename()).toMatch(/^ordo-backup-\d{4}-\d{2}-\d{2}\.json$/)
   const path = await download.path()
 
-  await page
-    .getByLabel('Backup file')
-    .setInputFiles({
-      name: 'bad.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from('{"app":"nope"}'),
-    })
+  await page.getByLabel('Backup file').setInputFiles({
+    name: 'bad.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"app":"nope"}'),
+  })
   await expect(page.getByText('That file cannot be restored')).toBeVisible()
 
   await page.getByLabel('Backup file').setInputFiles(path!)

@@ -1,14 +1,18 @@
 import {
+  Boxes,
   HardDrive,
   Home,
   Layers,
+  ListChecks,
   Palette,
   Presentation,
   Sparkles,
+  Target,
   type LucideIcon,
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { usePlanningStore } from '@/store/planning-store'
 import { ProductSwitcher } from './product-switcher'
 import { Wordmark } from './wordmark'
 
@@ -17,11 +21,16 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
+  /** Show how many of these the open product has. */
+  count?: 'objectives' | 'initiatives' | 'features'
 }
 
-const WORK: NavItem[] = [
-  { to: '/app', label: 'Dashboard', icon: Home, end: true },
-  { to: '/app/workspace', label: 'Workspace', icon: Layers },
+const HOME: NavItem[] = [{ to: '/app', label: 'Dashboard', icon: Home, end: true }]
+const PLAN: NavItem[] = [
+  { to: '/app/workspace', label: 'Overview', icon: Layers, end: true },
+  { to: '/app/workspace/objectives', label: 'Objectives', icon: Target, count: 'objectives' },
+  { to: '/app/workspace/initiatives', label: 'Initiatives', icon: Boxes, count: 'initiatives' },
+  { to: '/app/workspace/features', label: 'Features', icon: ListChecks, count: 'features' },
 ]
 const LEARN: NavItem[] = [
   { to: '/app/onboarding', label: 'Guide', icon: Sparkles },
@@ -33,9 +42,10 @@ const SYSTEM: NavItem[] = [
 ]
 
 function NavGroup({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
+  const planning = usePlanningStore()
   return (
     <ul className="flex flex-col gap-0.5">
-      {items.map(({ to, label, icon: Icon, end }) => (
+      {items.map(({ to, label, icon: Icon, end, count }) => (
         <li key={to}>
           <NavLink
             to={to}
@@ -51,7 +61,12 @@ function NavGroup({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => 
             }
           >
             <Icon className="size-4" aria-hidden />
-            {label}
+            <span className="flex-1">{label}</span>
+            {count && planning.status === 'ready' && (
+              <span className="text-caption font-normal text-muted-foreground tabular-nums">
+                {planning[count].length}
+              </span>
+            )}
           </NavLink>
         </li>
       ))}
@@ -79,7 +94,9 @@ export function SidebarContent({
       </Link>
       <ProductSwitcher onCreate={onCreateProduct} />
       <nav aria-label="Primary" className="flex flex-1 flex-col gap-4">
-        <NavGroup items={WORK} onNavigate={onNavigate} />
+        <NavGroup items={HOME} onNavigate={onNavigate} />
+        <hr className="border-border" />
+        <NavGroup items={PLAN} onNavigate={onNavigate} />
         <hr className="border-border" />
         <NavGroup items={LEARN} onNavigate={onNavigate} />
         <hr className="border-border" />

@@ -1,0 +1,30 @@
+import { cn } from '@/lib/utils'
+
+/**
+ * The Ordo mark (from Ordo_logo.svg, paths unchanged). The ring follows the theme's foreground colour
+ * so it stays visible in dark mode; the swoosh keeps its authored colour in both themes.
+ */
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 128 128"
+      fill="none"
+      aria-hidden
+      className={cn('size-7 shrink-0', className)}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M128 0L23.7434 64.1268L65.0669 66.3901L71.891 113.542L128 0Z"
+        fill="var(--logo-accent)"
+      />
+      <path
+        d="M62.4826 3.03493C74.4781 3.03493 85.6835 6.41627 95.1994 12.2764L82.652 18.6001C76.4648 15.9367 69.6462 14.4606 62.4826 14.4606C34.2845 14.4606 11.4254 37.3201 11.4254 65.5189C11.4254 93.6885 34.2374 116.529 62.3954 116.576L62.1165 128C27.7768 127.803 0 99.9057 0 65.5189C0 31.0099 27.9744 3.03493 62.4826 3.03493Z"
+        fill="currentColor"
+      />
+      <path
+        d="M116.776 34.5747C121.987 43.6977 124.965 54.2603 124.965 65.5189C124.965 95.0017 104.546 119.714 77.0781 126.287L83.1716 112.21C101.061 104.27 113.54 86.3526 113.54 65.5189C113.54 59.6059 112.534 53.928 110.686 48.6461L116.776 34.5747Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}

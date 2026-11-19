@@ -21,6 +21,7 @@ import {
   type BackupFile,
   type StorageInfo,
 } from '@/storage'
+import { usePlanningStore } from '@/store/planning-store'
 import { useWorkspaceStore } from '@/store/workspace-store'
 
 export function DataPage() {
@@ -68,6 +69,7 @@ function DataContent() {
         currentProducts={info?.counts.products ?? 0}
         onRestored={async () => {
           await refresh()
+          await usePlanningStore.getState().reload()
           await loadInfo()
         }}
       />

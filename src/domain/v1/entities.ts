@@ -10,6 +10,7 @@ import {
   laneSchema,
   longText,
   planningHorizonSchema,
+  prioritySchema,
   productCategorySchema,
   scoringSchema,
   softDeleteShape,
@@ -46,6 +47,29 @@ export type Product = z.infer<typeof productSchema>
 
 // ── Objective ──────────────────────────────────────────────────────────────
 export const OBJECTIVE_STATUSES = ['active', 'achieved', 'dropped'] as const
+
+/**
+ * A measurable result of an objective: what you will measure, where it started, where it should get to,
+ * and where it is now. Progress is derived (see progress.ts), never stored.
+ */
+const finite = (label: string) =>
+  z.number({ error: `${label} must be a number` }).finite(`${label} must be a number`)
+export const outcomeSchema = z
+  .object({
+    id: idSchema,
+    title: title(140),
+    metric: longText(100).optional(),
+    unit: longText(24).optional(),
+    baseline: finite('Baseline'),
+    target: finite('Target'),
+    current: finite('Current value'),
+  })
+  .refine((o) => o.target !== o.baseline, {
+    message: 'The target must differ from the baseline',
+    path: ['target'],
+  })
+export type Outcome = z.infer<typeof outcomeSchema>
+
 export const objectiveSchema = z.object({
   ...baseShape,
   ...softDeleteShape,
@@ -54,6 +78,8 @@ export const objectiveSchema = z.object({
   description: longText().optional(),
   status: z.enum(OBJECTIVE_STATUSES),
   targetDate: calendarDay.optional(),
+  /** Added after the first release as optional: older records and backups remain valid. */
+  outcomes: z.array(outcomeSchema).optional(),
   order: z.number(),
 })
 export type Objective = z.infer<typeof objectiveSchema>
@@ -69,6 +95,8 @@ export const initiativeSchema = z
     description: longText().optional(),
     status: workStatusSchema,
     scoring: scoringSchema.optional(),
+    priority: prioritySchema.optional(),
+    owner: longText(80).optional(),
     tagIds: z.array(idSchema),
     startDate: calendarDay.optional(),
     endDate: calendarDay.optional(),
@@ -88,6 +116,8 @@ export const featureSchema = z
     description: longText().optional(),
     status: workStatusSchema,
     scoring: scoringSchema.optional(),
+    priority: prioritySchema.optional(),
+    owner: longText(80).optional(),
     tagIds: z.array(idSchema),
     startDate: calendarDay.optional(),
     endDate: calendarDay.optional(),
