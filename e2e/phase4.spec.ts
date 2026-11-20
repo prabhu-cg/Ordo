@@ -537,7 +537,7 @@ test.describe('template management', () => {
     ).toBeVisible()
 
     await page
-      .getByRole('link', { name: 'Create a product from Quarterly product roadmap (copy)' })
+      .getByRole('link', { name: 'Create product from Quarterly product roadmap (copy)' })
       .click()
     await expect(
       page.getByRole('radio', { name: /Quarterly product roadmap \(copy\)/ }),

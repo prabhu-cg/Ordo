@@ -45,7 +45,7 @@ test.describe('landing page', () => {
     await page.getByRole('banner').getByRole('link', { name: 'Get started' }).click()
     await expect(page).toHaveURL(/\/app\/new$/)
     await page.goto('/')
-    await page.getByRole('link', { name: 'Use the Solo founder roadmap template' }).click()
+    await page.getByRole('link', { name: 'Use template: Solo founder roadmap' }).click()
     await expect(page).toHaveURL(/\/app\/new\?template=solo-founder$/)
     await expect(page.getByRole('radio', { name: /Solo founder roadmap/ })).toBeChecked()
   })

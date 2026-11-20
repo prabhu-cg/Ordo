@@ -107,10 +107,25 @@ export async function openTemplateRoadmap(page: Page) {
   await createFromTemplate(page, 'startup-mvp', 'Orbit')
   await page.goto('/app/roadmaps')
   await page.getByRole('link', { name: 'Open Roadmap' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Roadmap' })).toBeVisible()
+  await expect(page).toHaveURL(/\/app\/roadmaps\/[^/?]+/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Roadmap', exact: true })).toBeVisible()
 }
 
 export const lane = (page: Page, name: 'Now' | 'Next' | 'Later') =>
   page.getByRole('region', { name: new RegExp(`^${name},`) })
 export const card = (scope: Page | Locator, title: string) =>
   scope.getByRole('button', { name: `${title}, initiative` })
+
+/** Import a backup file on the Data page, adding it alongside what is already there. */
+export async function importAlongside(
+  page: Page,
+  file: Parameters<ReturnType<Page['getByLabel']>['setInputFiles']>[0],
+) {
+  await page.goto('/app/data')
+  await page.getByLabel('Backup file').setInputFiles(file)
+  await expect(page.getByRole('dialog', { name: 'What is in this backup' })).toBeVisible()
+  await page.getByRole('button', { name: 'Add alongside what I have' }).click()
+  // The toast says exactly "Imported". (The dialog's own text also contains the word, so match the whole text.)
+  await expect(page.getByText('Imported', { exact: true })).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+}

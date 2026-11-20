@@ -163,10 +163,7 @@ function TemplateList({
                 <Copy aria-hidden /> Duplicate
               </Button>
               <Button asChild variant="primary" size="sm">
-                <Link
-                  to={`/app/new?template=${t.id}`}
-                  aria-label={`Create a product from ${t.name}`}
-                >
+                <Link to={`/app/new?template=${t.id}`} aria-label={`Create product from ${t.name}`}>
                   Create product
                 </Link>
               </Button>

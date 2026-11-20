@@ -8,12 +8,12 @@ import { useBindings } from './bindings'
 import { today } from './dates'
 import { DragBoard, type BoardColumnSpec } from './drag-board'
 import { effectiveLane, type RoadmapRow } from './engine'
+import { useAppearanceStore } from '@/store/appearance-store'
 import type { CardField } from './card-fields'
 import { RoadmapCard } from './roadmap-card'
 import type { useRoadmapData } from './use-roadmap'
 
 type Data = ReturnType<typeof useRoadmapData>
-const FIELDS = new Set<CardField>(['priority', 'confidence', 'dependencies', 'dates'])
 
 /**
  * Now, next, later. Three flexible columns: drag cards between them or within them, or use the quick-edit
@@ -24,6 +24,8 @@ export function NowNextLaterView({ data }: { data: Data }) {
   const { moveRow, updateItem, removeRow, openItem: openRoadmapItem, openAdd } = useBindings()
   const mode: PlanningMode | undefined = roadmap!.planningMode
   const now = today()
+  const cardFields = useAppearanceStore((a) => a.cardFields)
+  const fields = useMemo(() => new Set<CardField>(cardFields), [cardFields])
 
   const laneOf = (row: RoadmapRow): Lane | 'none' => effectiveLane(row, mode, now) ?? 'none'
   const byKey = useMemo(() => new Map(filtered.map((r) => [r.key, r])), [filtered])
@@ -112,8 +114,9 @@ export function NowNextLaterView({ data }: { data: Data }) {
           return (
             <RoadmapCard
               row={row}
-              fields={FIELDS}
+              fields={fields}
               links={data.links.get(row.key)}
+              accent={roadmap?.color}
               parentTitle={parent?.title}
               lane={lane === 'none' ? undefined : lane}
               overlay={state.overlay}

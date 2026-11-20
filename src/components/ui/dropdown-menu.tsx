@@ -3,7 +3,14 @@ import { Check } from 'lucide-react'
 import type * as React from 'react'
 import { cn } from '@/lib/utils'
 
-export const DropdownMenu = DropdownMenuPrimitive.Root
+/**
+ * Menus are not modal. A modal menu hides the rest of the page from assistive technology while it is open, yet
+ * leaves everything behind it focusable, which is itself an accessibility fault. A non-modal one closes on Escape or
+ * a click elsewhere just the same, and keeps the page honest about what can be reached.
+ */
+export function DropdownMenu(props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  return <DropdownMenuPrimitive.Root modal={false} {...props} />
+}
 export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 export const DropdownMenuGroup = DropdownMenuPrimitive.Group
 

@@ -10,9 +10,14 @@ import {
 } from '@/components/ui/drawer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ConfidenceBadge, DependencyBadge, PriorityBadge } from '@/components/domain/indicators'
+import {
+  ConfidenceBadge,
+  DependencyBadge,
+  PriorityBadge,
+  StatusBadge,
+} from '@/components/domain/indicators'
 import { formatDate } from '@/lib/format'
-import { LEVEL_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import { LEVEL_LABELS } from '@/lib/labels'
 import type { Feature, Initiative } from '@/domain'
 import type { StampedBundle } from '@/templates/records'
 import type { LinkSummary } from '@/features/roadmap/engine'
@@ -59,7 +64,7 @@ export function TemplateItemDrawer({
               <DrawerTitle>{item.title}</DrawerTitle>
               <DrawerDescription asChild>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={STATUS_BADGE[item.status]}>{STATUS_LABELS[item.status]}</Badge>
+                  <StatusBadge status={item.status} />
                   <PriorityBadge
                     priority={item.priority}
                     className={item.priority ? '' : 'hidden'}
@@ -119,7 +124,7 @@ export function TemplateItemDrawer({
                             priority={f.priority}
                             className={f.priority ? '' : 'hidden'}
                           />
-                          <Badge variant={STATUS_BADGE[f.status]}>{STATUS_LABELS[f.status]}</Badge>
+                          <StatusBadge status={f.status} />
                         </span>
                       </li>
                     ))}

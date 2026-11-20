@@ -1,3 +1,4 @@
+import { StatusBadge } from '@/components/domain/indicators'
 import {
   ChevronDown,
   ChevronLeft,
@@ -8,11 +9,12 @@ import {
   Plus,
 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import type { Milestone, WorkStatus } from '@/domain'
+import type { Milestone } from '@/domain'
+import { TONE_BAR } from '@/lib/appearance'
+import { useAppearanceStore } from '@/store/appearance-store'
 import { formatDate } from '@/lib/format'
-import { LANE_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import { LANE_LABELS, STATUS_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import { useBindings } from './bindings'
 import {
@@ -51,15 +53,6 @@ const LANE_H = 44
 const FEATURE_H = 36
 const MILESTONE_H = 40
 const HEADER_H = 52
-
-const BAR: Record<WorkStatus, string> = {
-  'in-progress': 'bg-primary text-primary-foreground border-transparent',
-  planned: 'bg-primary-soft text-primary-text border-primary-text/40',
-  idea: 'bg-secondary text-ink border-border-strong',
-  shipped: 'bg-success-soft text-success border-transparent',
-  paused: 'bg-warning-soft text-warning border-transparent',
-  dropped: 'bg-destructive-soft text-destructive border-transparent',
-}
 
 type Meta =
   | {
@@ -179,7 +172,7 @@ export function TimelineView({ data }: { data: Data }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1">
+        <div data-export-hide className="flex items-center gap-1">
           <Button
             variant="outline"
             size="icon-sm"
@@ -209,6 +202,7 @@ export function TimelineView({ data }: { data: Data }) {
         <div
           role="group"
           aria-label="Timeline zoom"
+          data-export-hide
           className="flex items-center gap-0.5 rounded-full bg-surface p-0.5"
         >
           {ZOOMS.map((z) => (
@@ -228,7 +222,7 @@ export function TimelineView({ data }: { data: Data }) {
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+        <div data-export-hide className="flex flex-wrap items-center gap-2 sm:ml-auto">
           {hasFeatures && (
             <Button
               variant="outline"
@@ -518,9 +512,7 @@ export function TimelineView({ data }: { data: Data }) {
                       {row.item.title}
                     </button>
                     <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                      <Badge variant={STATUS_BADGE[row.item.status]}>
-                        {STATUS_LABELS[row.item.status]}
-                      </Badge>
+                      <StatusBadge status={row.item.status} />
                       <span className="text-caption text-muted-foreground">
                         {row.kind === 'feature' ? 'Feature' : 'Initiative'}
                         {lane ? ` · ${LANE_LABELS[lane]}` : ''}
@@ -531,7 +523,7 @@ export function TimelineView({ data }: { data: Data }) {
                     variant="outline"
                     size="sm"
                     onClick={() => commitRange(row, { start: monthStart(now), end: monthEnd(now) })}
-                    aria-label={`Schedule ${row.item.title} this month`}
+                    aria-label={`Schedule this month: ${row.item.title}`}
                   >
                     Schedule this month
                   </Button>
@@ -642,6 +634,7 @@ function Bar({ row, range, win, zoom, trackRef, height, thin, onCommit, onOpen }
   } | null>(null)
   const shown = preview ?? range
   const span = spanOf(shown, win)
+  const tone = useAppearanceStore((s) => s.statusTones[row.item.status])
   if (!span.visible) return <OutsideHint range={range} win={win} />
 
   const daysFor = (dx: number) =>
@@ -699,7 +692,7 @@ function Bar({ row, range, win, zoom, trackRef, height, thin, onCommit, onOpen }
     )
   }
 
-  const describe = `${row.item.title}, ${formatDate(range.start)} to ${formatDate(range.end)}. Enter opens details. Arrow keys move it by a week, Shift with arrows changes the end, Alt with arrows changes the start.`
+  const describe = `${row.item.title}, ${STATUS_LABELS[row.item.status]}, ${formatDate(range.start)} to ${formatDate(range.end)}. Enter opens details. Arrow keys move it by a week, Shift with arrows changes the end, Alt with arrows changes the start.`
 
   return (
     <div
@@ -715,7 +708,7 @@ function Bar({ row, range, win, zoom, trackRef, height, thin, onCommit, onOpen }
       title={preview ? `${formatDate(shown.start)} to ${formatDate(shown.end)}` : row.item.title}
       className={cn(
         'group absolute top-1/2 z-10 flex min-w-3 -translate-y-1/2 touch-none items-center overflow-hidden border px-3 text-label font-semibold select-none',
-        BAR[row.item.status],
+        TONE_BAR[tone][row.item.status === 'in-progress' ? 'solid' : 'soft'],
         span.clippedStart ? 'rounded-l-none border-l-0' : 'rounded-l-full',
         span.clippedEnd ? 'rounded-r-none border-r-0' : 'rounded-r-full',
         preview ? 'cursor-grabbing ring-2 ring-ring/50' : 'cursor-grab',

@@ -29,7 +29,7 @@ test('backup downloads and restore replaces data; invalid files are rejected', a
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Download backup' }).click(),
+    page.getByRole('button', { name: 'Download all products' }).click(),
   ])
   expect(download.suggestedFilename()).toMatch(/^ordo-backup-\d{4}-\d{2}-\d{2}\.json$/)
   const path = await download.path()
@@ -39,9 +39,10 @@ test('backup downloads and restore replaces data; invalid files are rejected', a
     mimeType: 'application/json',
     buffer: Buffer.from('{"app":"nope"}'),
   })
-  await expect(page.getByText('That file cannot be restored')).toBeVisible()
+  await expect(page.getByText('That file cannot be used')).toBeVisible()
 
   await page.getByLabel('Backup file').setInputFiles(path!)
+  await page.getByRole('button', { name: 'Replace everything…' }).click()
   await page.getByRole('button', { name: 'Replace with backup' }).click()
   await expect(page.getByText('Backup restored').first()).toBeVisible()
 })

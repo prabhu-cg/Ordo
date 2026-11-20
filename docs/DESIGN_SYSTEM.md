@@ -25,3 +25,13 @@ Ordo's wordmark is the text "Ordo" in the display serif with the tagline "Plan b
 `components/domain/indicators.tsx` is the one place that draws priority, confidence, impact and effort, and dependency state, so a table, a card and the matrix look the same. Colour is never the only signal: priority has an arrow (critical ▲▲, high ▲, medium =, low ▼), confidence an icon (exploring, tentative, committed), and every badge says its word. Confidence and dependency badges are focusable and explain themselves in a tooltip, so keyboard users get the same help as people with a mouse.
 
 Toasts (`components/ui/toast.tsx`) are our own rather than Radix's. They do not react to Escape, so the key always closes the drawer or dialog you are in, and an Undo button is not lost when you close what you just edited.
+
+## Appearance and print
+
+Six tones (grey, gold, blue, green, orange, red) are the only colours a person can choose, for statuses and roadmaps. Each is a semantic token with a soft and a solid form (`lib/appearance.ts`), so every choice keeps its contrast in light and dark. A status always shows its name as well as its colour.
+
+Density sets three variables (`--card-pad`, `--card-gap`, `--row-pad`) on the root; cards and table rows read them. It is copied to `localStorage` so it is right on the first paint.
+
+A printed page is always white with dark ink, whatever the screen theme: the print page removes the dark class while it is open and puts it back on leaving. Page furniture (margin, running header, footer) is fixed in `features/export/print-model.ts`.
+
+A card is one focusable element named by exactly the words it shows (its title); its other details are ordinary text beside it. This keeps the accessible name inside what is visible ("label in name") and lets a screen reader read priority, dates and the rest.

@@ -21,6 +21,12 @@ export function createMeta(db: OrdoDB) {
   }
 }
 
-export const META_KEYS = { activeProductId: 'activeProductId', onboarding: 'onboarding' } as const
+export const META_KEYS = {
+  activeProductId: 'activeProductId',
+  onboarding: 'onboarding',
+  /** The data as it was just before the last restore. */
+  safetyCopy: 'safetyCopy',
+  appearance: 'appearance',
+} as const
 /** Saved undo history is kept per product, under this prefix. */
 export const UNDO_KEY_PREFIX = 'undo:'

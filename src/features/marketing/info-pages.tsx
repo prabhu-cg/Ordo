@@ -1,3 +1,4 @@
+import { analyticsConfigured } from '@/lib/analytics'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { usePageTitle } from './use-page-title'
@@ -46,10 +47,22 @@ export function PrivacyPage() {
         keep standard request logs. Your roadmap data is not part of those requests. If you download
         a backup file, it is yours to store and share as you choose.
       </p>
+      <h2 className="font-sans">Analytics</h2>
+      <p>
+        {analyticsConfigured()
+          ? 'This site counts page views with a privacy-first service. It sets no cookies, stores nothing on your device, and never sees your products or roadmaps. It is switched off for anyone whose browser sends Do Not Track or Global Privacy Control.'
+          : 'This site does not use analytics, cookies or trackers of any kind.'}
+      </p>
+      <h2 className="font-sans">Files you import</h2>
+      <p>
+        A backup file you choose is read in your browser and checked before anything is added. It is
+        never uploaded, and nothing in it is run.
+      </p>
       <h2 className="font-sans">Removing your data</h2>
       <p>
-        Clearing this site’s data in your browser removes everything Ordo has stored. Download a
-        backup from <Link to="/app/data">Data and backup</Link> first if you want to keep it.
+        You can delete one product, or everything, from <Link to="/app/data">Data and backup</Link>.
+        Clearing this site’s data in your browser does the same. Ordo has no server copy, so a
+        deletion cannot be undone: download a backup first if you want to keep your work.
       </p>
       <h2 className="font-sans">Status of this page</h2>
       <p>
@@ -62,15 +75,36 @@ export function PrivacyPage() {
 
 export function TermsPage() {
   return (
-    <InfoPage title="Terms" intro="Formal terms have not been published yet.">
+    <InfoPage title="Terms" intro="Plain-language terms for using Ordo while it is a new product.">
+      <h2 className="font-sans">Your work is yours</h2>
       <p>
-        Ordo is an early version, and no terms of service have been written for it. This page will
-        be replaced with real terms before Ordo is offered more widely.
+        Everything you create in Ordo belongs to you. It stays in your browser and is never sent to
+        Ordo, so Ordo does not hold, use or claim any right over it.
       </p>
+      <h2 className="font-sans">You look after your backups</h2>
       <p>
-        In the meantime, the useful practical facts are on the <Link to="/privacy">Privacy</Link>{' '}
-        page and in the <Link to="/help">Help</Link> page: your data stays in your browser, and you
-        are responsible for keeping backups.
+        Because your work is stored only on your device, clearing your browser’s data, using a
+        different browser, or losing the device can remove it. Download a backup from{' '}
+        <Link to="/app/data">Data and backup</Link> regularly. Keeping backups is your
+        responsibility.
+      </p>
+      <h2 className="font-sans">As is, without warranty</h2>
+      <p>
+        Ordo is provided as it is, with no promise that it is free of mistakes, always available, or
+        suited to a particular purpose. Please do not rely on it as the only copy of anything you
+        cannot afford to lose, and check exports before you share them.
+      </p>
+      <h2 className="font-sans">Fair use</h2>
+      <p>
+        Do not try to disrupt the site, probe it for weaknesses without permission, or use it to
+        harm others.
+      </p>
+      <h2 className="font-sans">Changes and status</h2>
+      <p>
+        These terms may change as Ordo grows, and the date of the change will be visible here. This
+        is a plain-language summary rather than a formal legal agreement; a reviewed agreement has
+        not been published yet. See also <Link to="/privacy">Privacy</Link> and{' '}
+        <Link to="/help">Help</Link>.
       </p>
     </InfoPage>
   )
@@ -114,6 +148,18 @@ export function HelpPage() {
       <p>
         Open <Link to="/app/data">Data and backup</Link> and download a backup file now and then.
         You can restore it in any browser.
+      </p>
+      <h2 className="font-sans">How do I share or print a roadmap?</h2>
+      <p>
+        Open a roadmap and choose <strong>Export</strong>. You can save the view you are looking at
+        as a sharp image, preview and print it or save it as a PDF, take the items as a spreadsheet,
+        or download the whole product as a backup file. All of it is made in your browser.
+      </p>
+      <h2 className="font-sans">Can I bring a backup in without losing what I have?</h2>
+      <p>
+        Yes. On <Link to="/app/data">Data and backup</Link>, choose a file to see what is in it,
+        then add it alongside what you have. Nothing that is already there is changed. If you choose
+        to replace everything instead, Ordo keeps what was there so you can bring it back.
       </p>
       <h2 className="font-sans">I cleared my browser data</h2>
       <p>

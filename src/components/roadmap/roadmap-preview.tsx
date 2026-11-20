@@ -21,8 +21,8 @@ import {
   type WorkStatus,
 } from '@/domain'
 import { formatDate, monthShort, pluralise } from '@/lib/format'
-import { ConfidenceBadge, PriorityBadge } from '@/components/domain/indicators'
-import { LANE_LABELS, LEVEL_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import { ConfidenceBadge, PriorityBadge, StatusBadge } from '@/components/domain/indicators'
+import { LANE_LABELS, LEVEL_LABELS, STATUS_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 
 /**
@@ -117,9 +117,7 @@ function NowNextLater({ bundle, onSelect, compact }: ViewProps) {
                     </p>
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <Badge variant={STATUS_BADGE[item.initiative.status]}>
-                      {STATUS_LABELS[item.initiative.status]}
-                    </Badge>
+                    <StatusBadge status={item.initiative.status} />
                     <span className="text-label text-muted-foreground">
                       {item.initiative.objectiveId
                         ? objectiveTitle.get(item.initiative.objectiveId)
@@ -407,9 +405,7 @@ function InitiativeDrawer({
               <DrawerTitle>{initiative.title}</DrawerTitle>
               <DrawerDescription asChild>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={STATUS_BADGE[initiative.status]}>
-                    {STATUS_LABELS[initiative.status]}
-                  </Badge>
+                  <StatusBadge status={initiative.status} />
                   {entry?.lane && <Badge variant="outline">{LANE_LABELS[entry.lane]}</Badge>}
                   <span className="text-caption text-muted-foreground">Sample, read-only</span>
                 </div>
@@ -483,7 +479,7 @@ function InitiativeDrawer({
                   {features.map((f) => (
                     <li key={f.id} className="flex items-center justify-between gap-3 py-2.5">
                       <span className="text-body text-foreground">{f.title}</span>
-                      <Badge variant={STATUS_BADGE[f.status]}>{STATUS_LABELS[f.status]}</Badge>
+                      <StatusBadge status={f.status} />
                     </li>
                   ))}
                 </ul>

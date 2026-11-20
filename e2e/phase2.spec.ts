@@ -34,9 +34,7 @@ test.describe('building the hierarchy', () => {
     await expect(page.getByText('80% overall')).toBeVisible()
 
     // Initiative, created from the objective, so the link is preset.
-    await page
-      .getByRole('button', { name: 'Add an initiative to Find the first 25 people' })
-      .click()
+    await page.getByRole('button', { name: 'Add initiative to Find the first 25 people' }).click()
     const id = drawer(page, 'New initiative')
     await expect(id.getByLabel('Objective').locator('option:checked')).toHaveText(
       'Find the first 25 people',

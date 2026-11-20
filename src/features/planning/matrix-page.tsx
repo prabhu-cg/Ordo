@@ -1,3 +1,4 @@
+import { splitHandle } from '@/features/roadmap/card-handle'
 import { Info, MoreHorizontal, RotateCcw } from 'lucide-react'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -228,6 +229,9 @@ function MatrixContent() {
                 const it = byKey.get(key)
                 if (!it) return null
                 const manual = Boolean(it.item.matrixOverride)
+                const { ref, listeners, attributes } = splitHandle(
+                  state.handleProps?.handleProps as Record<string, unknown> | undefined,
+                )
                 return (
                   <div
                     className={cn(
@@ -236,22 +240,31 @@ function MatrixContent() {
                     )}
                   >
                     <div
-                      {...state.handleProps?.handleProps}
+                      {...listeners}
                       onClick={() => open({ kind: it.kind, id: it.item.id })}
                       onKeyDown={(e) => {
                         state.handleProps?.handleProps.onKeyDown?.(e)
-                        if (e.key === 'Enter' && e.target === e.currentTarget) {
+                        if (
+                          e.key === 'Enter' &&
+                          (e.target as HTMLElement).getAttribute('role') === 'button'
+                        ) {
                           e.preventDefault()
                           open({ kind: it.kind, id: it.item.id })
                         }
                       }}
-                      aria-label={`${it.item.title}, ${it.kind}`}
-                      className="block cursor-pointer rounded-input p-3 pr-10 text-left outline-offset-2"
+                      className="block cursor-pointer rounded-input p-3 pr-10 text-left has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring/40"
                     >
                       <span className="text-label text-muted-foreground">
                         {it.kind === 'feature' ? 'Feature' : 'Initiative'}
                       </span>
-                      <span className="mt-1 line-clamp-3 block text-body font-semibold break-words text-foreground">
+                      <span
+                        {...(state.overlay ? {} : { role: 'button', tabIndex: 0, ...attributes })}
+                        ref={(node) => {
+                          if (!state.overlay) ref?.(node)
+                        }}
+                        aria-label={state.overlay ? undefined : `${it.item.title}, ${it.kind}`}
+                        className="mt-1 line-clamp-3 block text-body font-semibold break-words text-foreground outline-none"
+                      >
                         {it.item.title}
                       </span>
                       <span className="mt-2 flex flex-wrap items-center gap-1.5">

@@ -10,6 +10,7 @@ import {
   Palette,
   Presentation,
   Sparkles,
+  SlidersHorizontal,
   Target,
   type LucideIcon,
 } from 'lucide-react'
@@ -43,6 +44,7 @@ const LEARN: NavItem[] = [
   { to: '/app/example', label: 'Example roadmap', icon: Presentation },
 ]
 const SYSTEM: NavItem[] = [
+  { to: '/app/appearance', label: 'Appearance', icon: SlidersHorizontal },
   { to: '/app/data', label: 'Data and backup', icon: HardDrive },
   { to: '/app/design-system', label: 'Design system', icon: Palette },
 ]
@@ -90,12 +92,7 @@ export function SidebarContent({
 }) {
   return (
     <div className="flex h-full flex-col gap-6 px-4 py-5">
-      <Link
-        to="/"
-        aria-label="Ordo home"
-        onClick={onNavigate}
-        className="mx-1.5 self-start rounded-sm"
-      >
+      <Link to="/" onClick={onNavigate} className="mx-1.5 self-start rounded-sm">
         <Wordmark tagline />
       </Link>
       <ProductSwitcher onCreate={onCreateProduct} />

@@ -1,15 +1,13 @@
 import { Badge } from '@/components/ui/badge'
-import type { Tag, WorkStatus } from '@/domain'
-import { STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import { StatusBadge } from '@/components/domain/indicators'
+import type { Tag } from '@/domain'
 import { cn } from '@/lib/utils'
 
 /** Shared building blocks for the initiatives and features tables. */
 export const th = 'border-b px-3 py-2.5 text-label font-semibold text-muted-foreground'
-export const td = 'border-b px-3 py-3 align-top'
+export const td = 'border-b px-3 py-[var(--row-pad)] align-top'
 
-export const StatusBadge = ({ status }: { status: WorkStatus }) => (
-  <Badge variant={STATUS_BADGE[status]}>{STATUS_LABELS[status]}</Badge>
-)
+export { StatusBadge }
 
 export function TagList({
   ids,

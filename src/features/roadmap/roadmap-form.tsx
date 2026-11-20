@@ -8,6 +8,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer'
 import { Field } from '@/components/ui/field'
+import { TONE_LABELS, TONE_ORDER, TONE_SWATCH } from '@/lib/appearance'
 import { Input, Select, Textarea } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
 import {
@@ -16,6 +17,7 @@ import {
   type PlanningHorizon,
   type PlanningMode,
   type RoadmapItemType,
+  type Tone,
 } from '@/domain'
 import { HORIZON_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
@@ -67,6 +69,7 @@ export function RoadmapForm({ id }: { id?: string }) {
     defaultView: (existing?.defaultView ?? 'now-next-later') as View,
     mode: (existing?.planningMode ?? 'flexible') as PlanningMode,
     types: new Set<RoadmapItemType>(existing?.itemTypes ?? ROADMAP_ITEM_TYPES),
+    color: (existing?.color ?? '') as Tone | '',
     include: initiatives.length > 0,
   }))
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -99,6 +102,7 @@ export function RoadmapForm({ id }: { id?: string }) {
           defaultView: values.defaultView,
           planningMode: values.mode,
           itemTypes,
+          color: values.color || undefined,
         },
         !id && values.include,
       )
@@ -154,6 +158,48 @@ export function RoadmapForm({ id }: { id?: string }) {
             />
           )}
         </Field>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-label font-semibold text-foreground">
+            Colour <span className="ml-1.5 font-normal text-muted-foreground">optional</span>
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { tone: '' as const, label: 'None' },
+              ...TONE_ORDER.map((t) => ({ tone: t, label: TONE_LABELS[t] })),
+            ].map((o) => (
+              <label
+                key={o.tone || 'none'}
+                className={cn(
+                  'flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-body transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring/40',
+                  values.color === o.tone
+                    ? 'border-primary-text bg-primary-soft font-semibold text-primary-text'
+                    : 'hover:bg-sand',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="roadmap-colour"
+                  className="sr-only"
+                  checked={values.color === o.tone}
+                  onChange={() => set('color', o.tone)}
+                />
+                {o.tone ? (
+                  <span aria-hidden className={cn('size-3 rounded-full', TONE_SWATCH[o.tone])} />
+                ) : (
+                  <span
+                    aria-hidden
+                    className="size-3 rounded-full border border-dashed border-border-strong"
+                  />
+                )}
+                {o.label}
+              </label>
+            ))}
+          </div>
+          <p className="text-caption text-muted-foreground">
+            Shown as an edge on this roadmap's cards, beside its name, and in exports.
+          </p>
+        </fieldset>
+
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label="Planning horizon" note="optional" error={errors.planningHorizon}>
             {(c) => (

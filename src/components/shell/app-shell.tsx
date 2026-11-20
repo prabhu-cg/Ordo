@@ -34,6 +34,7 @@ export function AppShell() {
   useEffect(() => {
     if (status === 'ready') void loadTemplates()
   }, [status, loadTemplates])
+
   // Keep the planning data in step with whichever product is open.
   useEffect(() => {
     if (status === 'ready') void loadPlanning(activeProductId)
@@ -51,11 +52,14 @@ export function AppShell() {
 
   return (
     <TooltipProvider>
-      <a href="#main" className="skip-link">
+      <a href="#main" className="skip-link" data-print-hide>
         Skip to content
       </a>
       <div className="min-h-dvh bg-background">
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sidebar-width)] border-r bg-surface lg:block">
+        <aside
+          data-print-hide
+          className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sidebar-width)] border-r bg-surface lg:block"
+        >
           <SidebarContent onCreateProduct={createProduct} />
         </aside>
 
@@ -69,8 +73,11 @@ export function AppShell() {
           </DrawerContent>
         </Drawer>
 
-        <div className="lg:pl-[var(--sidebar-width)]">
-          <header className="sticky top-0 z-20 flex h-[var(--header-height)] items-center gap-3 border-b bg-background px-4 sm:px-6 lg:px-8">
+        <div className="print-reset lg:pl-[var(--sidebar-width)]">
+          <header
+            data-print-hide
+            className="sticky top-0 z-20 flex h-[var(--header-height)] items-center gap-3 border-b bg-background px-4 sm:px-6 lg:px-8"
+          >
             <Button
               variant="ghost"
               size="icon-sm"

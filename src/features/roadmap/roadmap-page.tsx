@@ -28,6 +28,7 @@ import { pluralise } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useItemDrawer } from '@/store/drawer-store'
 import { useUndoStore } from '@/store/undo-store'
+import { RoadmapExportMenu } from '@/features/export/export-menu'
 import { deleteRoadmap, ensureViews, undoLatest } from './actions'
 import { BoardView } from './board-view'
 import { NowNextLaterView } from './nnl-view'
@@ -136,6 +137,7 @@ function RoadmapContent({ id }: { id?: string }) {
             >
               <Undo2 aria-hidden /> Undo
             </Button>
+            <RoadmapExportMenu roadmap={roadmap} view={view} />
             <Button variant="outline" onClick={() => openRoadmapForm(roadmap.id)}>
               <Settings2 aria-hidden /> Settings
             </Button>

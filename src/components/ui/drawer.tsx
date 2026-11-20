@@ -2,6 +2,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { X } from 'lucide-react'
 import type * as React from 'react'
+import { useRestoreFocus } from '@/lib/use-restore-focus'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 import { DialogOverlay } from './dialog'
@@ -38,19 +39,21 @@ export function DrawerContent({
   size,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & VariantProps<typeof drawerVariants>) {
+  // Focus the panel itself, unless a field inside already asked for focus. Otherwise focus would land on
+  // whatever is first, such as a badge with a tooltip, and the tooltip would swallow the first Escape.
+  const focus = useRestoreFocus((e) => {
+    const panel = (e.currentTarget ?? e.target) as HTMLElement | null
+    const content = panel?.closest?.('[role="dialog"]') ?? panel
+    if (content instanceof HTMLElement && !content.contains(document.activeElement)) {
+      e.preventDefault()
+      content.focus()
+    }
+  })
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        // Focus the panel itself, unless a field inside already asked for focus. Otherwise focus would land on
-        // whatever is first, such as a badge with a tooltip, and the tooltip would swallow the first Escape.
-        onOpenAutoFocus={(e) => {
-          const panel = e.currentTarget as HTMLElement
-          if (!panel.contains(document.activeElement)) {
-            e.preventDefault()
-            panel.focus()
-          }
-        }}
+        {...focus}
         className={cn(drawerVariants({ side, size }), className)}
         {...props}
       >

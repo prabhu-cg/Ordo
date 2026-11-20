@@ -1,3 +1,4 @@
+import { useRestoreFocus } from '@/lib/use-restore-focus'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import type * as React from 'react'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ export function DialogContent({
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
+  const focus = useRestoreFocus()
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
@@ -38,6 +40,7 @@ export function DialogContent({
           'fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card border bg-card text-ink shadow-raised data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
           className,
         )}
+        {...focus}
         {...props}
       >
         {children}

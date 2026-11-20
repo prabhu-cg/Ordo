@@ -16,7 +16,8 @@ import { PRIORITY_LABELS, STATUS_LABELS } from '@/lib/labels'
 import { useBindings } from './bindings'
 import { DragBoard } from './drag-board'
 import { boardColumns, groupPatch, type GroupBy } from './engine'
-import { CARD_FIELD_LABELS, DEFAULT_CARD_FIELDS, type CardField } from './card-fields'
+import { useAppearanceStore } from '@/store/appearance-store'
+import { CARD_FIELD_LABELS, type CardField } from './card-fields'
 import { RoadmapCard } from './roadmap-card'
 import type { useRoadmapData } from './use-roadmap'
 
@@ -54,9 +55,10 @@ export function BoardView({ data }: { data: Data }) {
   const config = view?.config ?? {}
   const groupBy: GroupBy = isGroup(config.groupBy) ? config.groupBy : 'status'
   const sort = config.sort ?? 'manual'
+  const defaultFields = useAppearanceStore((a) => a.cardFields)
   const fields = useMemo(
-    () => new Set<CardField>(config.cardFields ?? DEFAULT_CARD_FIELDS),
-    [config.cardFields],
+    () => new Set<CardField>(config.cardFields ?? defaultFields),
+    [config.cardFields, defaultFields],
   )
 
   const columns = useMemo(
@@ -80,7 +82,7 @@ export function BoardView({ data }: { data: Data }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end gap-3">
+      <div data-export-hide className="flex flex-wrap items-end gap-3">
         <Field label="Group by" className="w-44">
           {(c) => (
             <Select
@@ -186,6 +188,7 @@ export function BoardView({ data }: { data: Data }) {
               row={row}
               fields={fields}
               links={data.links.get(row.key)}
+              accent={roadmap?.color}
               hideStatus={groupBy === 'status'}
               parentTitle={groupBy === 'initiative' ? undefined : parent?.title}
               objectiveTitle={objectiveTitle(row)}

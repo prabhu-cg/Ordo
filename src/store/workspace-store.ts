@@ -130,7 +130,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
     },
 
     async deleteProductForever(id) {
-      await getStorage().purgeProduct(id)
+      await getStorage().purgeProductAndHistory(id)
       await sync()
     },
   }

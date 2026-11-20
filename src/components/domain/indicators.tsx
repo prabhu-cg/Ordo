@@ -12,7 +12,15 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip } from '@/components/ui/tooltip'
-import { CONFIDENCE_LEVELS, type Confidence, type Level, type Priority } from '@/domain'
+import {
+  CONFIDENCE_LEVELS,
+  type Confidence,
+  type Level,
+  type Priority,
+  type WorkStatus,
+} from '@/domain'
+import { TONE_BADGE } from '@/lib/appearance'
+import { useAppearanceStore } from '@/store/appearance-store'
 import {
   CONFIDENCE_BADGE,
   CONFIDENCE_HELP,
@@ -20,6 +28,7 @@ import {
   LEVEL_LABELS,
   PRIORITY_BADGE,
   PRIORITY_LABELS,
+  STATUS_LABELS,
 } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +36,16 @@ import { cn } from '@/lib/utils'
  * One look for each idea, wherever it appears. Colour is never the only signal: priority carries an arrow,
  * confidence an icon, and every badge says its word.
  */
+/** A status, in the colour chosen for it under Appearance. */
+export function StatusBadge({ status, className }: { status: WorkStatus; className?: string }) {
+  const tone = useAppearanceStore((s) => s.statusTones[status])
+  return (
+    <Badge variant={TONE_BADGE[tone]} className={className}>
+      {STATUS_LABELS[status]}
+    </Badge>
+  )
+}
+
 const PRIORITY_ICON = {
   critical: ChevronsUp,
   high: ChevronUp,

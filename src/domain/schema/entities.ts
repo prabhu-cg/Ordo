@@ -172,6 +172,10 @@ export const roadmapEntrySchema = z
   .refine(endAfterStart, END_AFTER_START_MESSAGE)
 export type RoadmapEntry = z.infer<typeof roadmapEntrySchema>
 
+export const TONES = ['neutral', 'amber', 'success', 'info', 'warning', 'destructive'] as const
+export const toneSchema = z.enum(TONES)
+export type Tone = z.infer<typeof toneSchema>
+
 export const roadmapSchema = z.object({
   ...baseShape,
   ...softDeleteShape,
@@ -185,6 +189,8 @@ export const roadmapSchema = z.object({
   planningMode: planningModeSchema.optional(),
   /** What this roadmap shows. Absent means initiatives, features and milestones. */
   itemTypes: z.array(roadmapItemTypeSchema).min(1, 'Show at least one kind of item').optional(),
+  /** The roadmap's own colour, shown on its cards and in exports. Absent means no accent. */
+  color: toneSchema.optional(),
 })
 export type Roadmap = z.infer<typeof roadmapSchema>
 

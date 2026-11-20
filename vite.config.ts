@@ -1,7 +1,21 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
+
+/**
+ * The security headers live in vercel.json, which is what production serves. The local preview serves the same
+ * ones, so the tests run against the real policy and a blocked script or style shows up before release.
+ */
+const vercel = JSON.parse(
+  fs.readFileSync(path.resolve(import.meta.dirname, 'vercel.json'), 'utf8'),
+) as {
+  headers: { source: string; headers: { key: string; value: string }[] }[]
+}
+const securityHeaders = Object.fromEntries(
+  (vercel.headers.find((h) => h.source === '/(.*)')?.headers ?? []).map((h) => [h.key, h.value]),
+)
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -27,6 +41,7 @@ export default defineConfig({
     },
   },
   server: { port: 5173, strictPort: true },
+  preview: { headers: securityHeaders },
   test: {
     environment: 'jsdom',
     globals: true,

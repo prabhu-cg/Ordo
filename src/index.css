@@ -408,3 +408,37 @@ details > summary {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+/* ── Density: how much room cards and table rows take. Set by Appearance. ─────────────────────────── */
+:root {
+  --card-pad: 0.75rem;
+  --card-gap: 0.5rem;
+  --row-pad: 0.75rem;
+}
+:root[data-density='compact'] {
+  --card-pad: 0.5rem;
+  --card-gap: 0.25rem;
+  --row-pad: 0.375rem;
+}
+
+/* ── Print: only the document, on white, with the colours kept. ──────────────────────────────────── */
+@media print {
+  [data-print-hide] {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  .print-reset {
+    padding-left: 0 !important;
+  }
+  #main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

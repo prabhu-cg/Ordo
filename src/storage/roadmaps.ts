@@ -19,7 +19,13 @@ import type { Repositories } from './repositories'
  */
 export type RoadmapFields = Pick<
   NewRecord<Roadmap>,
-  'name' | 'description' | 'planningHorizon' | 'defaultView' | 'planningMode' | 'itemTypes'
+  | 'name'
+  | 'description'
+  | 'planningHorizon'
+  | 'defaultView'
+  | 'planningMode'
+  | 'itemTypes'
+  | 'color'
 >
 export type NewEntry = { itemType: 'initiative' | 'feature'; itemId: string; lane?: Lane }
 
@@ -137,6 +143,7 @@ export function createRoadmapService(db: OrdoDB, r: Repositories) {
           'defaultView',
           'planningMode',
           'itemTypes',
+          'color',
         ] as const
         const patch = Object.fromEntries(keys.map((k) => [k, fields[k]])) as Partial<Roadmap>
         const saved = await r.roadmaps.update(id, patch)

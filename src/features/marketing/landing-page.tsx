@@ -255,7 +255,7 @@ function Templates() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link to={`/app/new?template=${t.id}`} aria-label={`Use the ${t.name} template`}>
+                  <Link to={`/app/new?template=${t.id}`} aria-label={`Use template: ${t.name}`}>
                     Use template
                   </Link>
                 </Button>

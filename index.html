@@ -10,13 +10,7 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Ordo — Plan better. Build smarter</title>
-    <script>
-      // Set the theme before first paint so there is no flash. Light or dark only.
-      try {
-        var t = localStorage.getItem('theme')
-        if (t === 'dark') document.documentElement.classList.add('dark')
-      } catch (e) {}
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

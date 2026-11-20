@@ -65,6 +65,16 @@ export const BACKUP_MIGRATIONS: Record<
   },
 }
 
+/** The version number a backup file says it has, read without trusting anything else in it. */
+export function readBackupVersion(text: string): number | undefined {
+  try {
+    const v = (JSON.parse(text) as { schemaVersion?: unknown })?.schemaVersion
+    return typeof v === 'number' && Number.isInteger(v) ? v : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function countBackup(backup: BackupFile): BackupCounts {
   return Object.fromEntries(DATA_TABLES.map((t) => [t, backup.data[t].length])) as BackupCounts
 }

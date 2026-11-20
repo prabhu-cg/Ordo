@@ -1,3 +1,5 @@
+import { TONE_SWATCH } from '@/lib/appearance'
+import { cn } from '@/lib/utils'
 import { Map as MapIcon, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -75,6 +77,15 @@ function RoadmapsContent() {
               >
                 <div className="max-w-2xl min-w-0">
                   <h2 className="font-sans text-title font-semibold break-words text-foreground">
+                    {r.color && (
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'mr-2 inline-block size-2.5 rounded-full',
+                          TONE_SWATCH[r.color],
+                        )}
+                      />
+                    )}
                     <Link
                       to={`/app/roadmaps/${r.id}`}
                       className="rounded-sm hover:text-primary-text hover:underline hover:underline-offset-4"

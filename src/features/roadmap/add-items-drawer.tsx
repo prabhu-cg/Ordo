@@ -1,5 +1,5 @@
+import { StatusBadge } from '@/components/domain/indicators'
 import { useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DrawerBody,
@@ -10,9 +10,9 @@ import {
 } from '@/components/ui/drawer'
 import { Field } from '@/components/ui/field'
 import { Input, Select } from '@/components/ui/input'
-import { LANES, type Lane } from '@/domain'
+import { LANES, type Lane, type WorkStatus } from '@/domain'
 import { pluralise } from '@/lib/format'
-import { LANE_LABELS, STATUS_BADGE, STATUS_LABELS } from '@/lib/labels'
+import { LANE_LABELS } from '@/lib/labels'
 import { useItemDrawer } from '@/store/drawer-store'
 import { usePlanningStore } from '@/store/planning-store'
 import { addItems } from './actions'
@@ -73,7 +73,7 @@ export function AddItemsDrawer({
 
   const group = (
     title: string,
-    rows: { id: string; title: string; status: keyof typeof STATUS_LABELS }[],
+    rows: { id: string; title: string; status: WorkStatus }[],
     type: 'initiative' | 'feature',
   ) =>
     rows.length > 0 && (
@@ -92,7 +92,7 @@ export function AddItemsDrawer({
                     className="size-4 accent-[var(--primary-text)]"
                   />
                   <span className="min-w-0 flex-1 text-body text-foreground">{r.title}</span>
-                  <Badge variant={STATUS_BADGE[r.status]}>{STATUS_LABELS[r.status]}</Badge>
+                  <StatusBadge status={r.status} />
                 </label>
               </li>
             )

@@ -175,7 +175,7 @@ function ObjectiveRow({
             variant="outline"
             size="sm"
             onClick={() => open({ kind: 'initiative', preset: { objectiveId: o.id } })}
-            aria-label={`Add an initiative to ${o.title}`}
+            aria-label={`Add initiative to ${o.title}`}
           >
             <Plus aria-hidden /> Add initiative
           </Button>

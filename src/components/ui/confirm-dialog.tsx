@@ -19,6 +19,8 @@ interface ConfirmDialogProps {
   /** Destructive confirmations use an outline button with red text, never a solid red block. */
   destructive?: boolean
   onConfirm: () => Promise<void> | void
+  /** Hold the confirm button back until something is true, such as the right word being typed. */
+  confirmDisabled?: boolean
 }
 
 /** Stops accidental data loss: say what will happen, name the action, allow cancelling. */
@@ -30,6 +32,7 @@ export function ConfirmDialog({
   confirmLabel,
   destructive,
   onConfirm,
+  confirmDisabled,
 }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false)
   async function run() {
@@ -55,7 +58,12 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancel
           </Button>
-          <Button variant={destructive ? 'destructive' : 'primary'} onClick={run} loading={busy}>
+          <Button
+            variant={destructive ? 'destructive' : 'primary'}
+            onClick={run}
+            loading={busy}
+            disabled={confirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </DialogFooter>

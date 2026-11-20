@@ -1,6 +1,6 @@
 import { Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { ConfidenceBadge, PriorityBadge } from '@/components/domain/indicators'
+import { ConfidenceBadge, PriorityBadge, StatusBadge } from '@/components/domain/indicators'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,13 +25,7 @@ import {
   type WorkStatus,
 } from '@/domain'
 import { formatDate } from '@/lib/format'
-import {
-  LANE_LABELS,
-  LEVEL_LABELS,
-  PRIORITY_LABELS,
-  STATUS_BADGE,
-  STATUS_LABELS,
-} from '@/lib/labels'
+import { LANE_LABELS, LEVEL_LABELS, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/labels'
 import { useItemDrawer } from '@/store/drawer-store'
 import { usePlanningStore } from '@/store/planning-store'
 import { addDependency, moveRow, removeDependency, removeRow, updateItem } from './actions'
@@ -188,7 +182,7 @@ export function RoadmapItemDrawer({ roadmapId, itemType, itemId }: Props) {
         <DrawerTitle>{item.title}</DrawerTitle>
         <DrawerDescription asChild>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={STATUS_BADGE[item.status]}>{STATUS_LABELS[item.status]}</Badge>
+            <StatusBadge status={item.status} />
             {item.priority && <PriorityBadge priority={item.priority} />}
             {item.confidence && <ConfidenceBadge confidence={item.confidence} />}
             <span className="text-caption text-muted-foreground">

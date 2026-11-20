@@ -1,6 +1,7 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { AppShell } from '@/components/shell/app-shell'
 import { MarketingLayout } from '@/features/marketing/marketing-layout'
+import { RouteError } from '@/features/error-page'
 import { NotFoundPage } from '@/features/not-found'
 
 /**
@@ -17,6 +18,7 @@ export const routes: RouteObject[] = [
   {
     // The public site.
     element: <MarketingLayout />,
+    errorElement: <RouteError />,
     children: [
       {
         index: true,
@@ -58,6 +60,7 @@ export const routes: RouteObject[] = [
     // The application. Everything under /app reads and writes the local database.
     path: 'app',
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       {
         index: true,
@@ -105,6 +108,11 @@ export const routes: RouteObject[] = [
         handle: { title: 'Roadmaps' },
       },
       {
+        path: 'roadmaps/:roadmapId/print',
+        lazy: page(() => import('@/features/export/print-page').then((m) => m.RoadmapPrintPage)),
+        handle: { title: 'Print roadmap' },
+      },
+      {
         path: 'roadmaps/:roadmapId',
         lazy: page(() => import('@/features/roadmap/roadmap-page').then((m) => m.RoadmapPage)),
         handle: { title: 'Roadmap' },
@@ -134,6 +142,13 @@ export const routes: RouteObject[] = [
           import('@/features/example/example-page').then((m) => () => <m.ExampleContent app />),
         ),
         handle: { title: 'Example roadmap' },
+      },
+      {
+        path: 'appearance',
+        lazy: page(() =>
+          import('@/features/appearance/appearance-page').then((m) => m.AppearancePage),
+        ),
+        handle: { title: 'Appearance' },
       },
       {
         path: 'data',

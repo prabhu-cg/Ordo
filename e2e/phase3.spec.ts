@@ -506,7 +506,7 @@ test.describe('timeline', () => {
       page.getByRole('button', { name: 'Show 1 feature of Build the MVP' }),
     ).toBeVisible()
 
-    await undated.getByRole('button', { name: 'Schedule Core workflow this month' }).click()
+    await undated.getByRole('button', { name: 'Schedule this month: Core workflow' }).click()
     await expect(page.getByRole('heading', { name: /^No dates/ })).toHaveCount(0)
     await page.getByRole('button', { name: 'Show 1 feature of Build the MVP' }).click()
     await expect(

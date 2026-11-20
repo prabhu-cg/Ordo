@@ -86,3 +86,13 @@ A roadmap is `entries`: a list of references to initiatives and features. The th
 - A template holds objectives, initiatives, features, milestones, links and roadmap lanes by key, with dates as month offsets. `resolveTemplate` turns one into a `ProductBundle` with fresh ids and real dates, and the workspace saves the bundle in one transaction. The template is never changed by being used. A saved template carries structure, priorities, estimates, descriptions, tags on initiatives and features, link notes and milestone notes; owners are left out on purpose.
 - Products made from a starter are flagged `sampleData` with `templateName`, shown as a banner and a badge until the user selects "These are mine now". Custom templates do not set the flag.
 - The template **preview** runs the real roadmap views against an in-memory copy (`RoadmapBindings`), so nothing is written. "Reset preview" restores the original.
+
+## Export, import and settings (Phase 5)
+
+- **Roadmap colour**: `Roadmap.color` is an optional tone (`neutral | amber | success | info | warning | destructive`). It is additive, so version 2 backups without it remain valid and older releases ignore it.
+- **Appearance** (density, a colour for each status, which details cards show) is a setting of the device, not of a product. It is saved in the `meta` table under `appearance`, is read tolerantly (anything damaged falls back to the default), and is deliberately not part of a backup.
+- **Product backup**: `exportProductBackup` writes the normal backup format holding only that product's rows (its objectives, initiatives, features, milestones, roadmaps and views, tags, dependencies and history). Custom templates belong to the person, so they are only in a whole-device backup.
+- **Import alongside** (`importBackupAsNew`): adds a backup's products without changing anything that exists. If any id in the file is already in use, every record gets a new id (`remapIds` rewrites every reference) and products are named "… (imported copy)". One transaction: on failure nothing is added.
+- **Replace** (`restoreBackup`) first keeps what was there in `meta` under `safetyCopy`, so the replace can itself be undone (`previousCopy`). It also clears saved undo history.
+- **CSV**: one row per objective, initiative or feature. `parent_id` carries the hierarchy (objective → initiative → feature); `blocks` and `blocked_by` list ids. Cells that begin with `=`, `+`, `-` or `@` are prefixed with an apostrophe so a spreadsheet cannot run them as formulas. Written as UTF-8 with a byte order mark.
+- **Erase everything** clears every data table and `meta`.
