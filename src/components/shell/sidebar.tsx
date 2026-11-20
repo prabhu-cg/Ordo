@@ -7,7 +7,6 @@ import {
   Layers,
   Map as MapIcon,
   ListChecks,
-  Palette,
   Presentation,
   Sparkles,
   SlidersHorizontal,
@@ -46,7 +45,6 @@ const LEARN: NavItem[] = [
 const SYSTEM: NavItem[] = [
   { to: '/app/appearance', label: 'Appearance', icon: SlidersHorizontal },
   { to: '/app/data', label: 'Data and backup', icon: HardDrive },
-  { to: '/app/design-system', label: 'Design system', icon: Palette },
 ]
 
 function NavGroup({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {

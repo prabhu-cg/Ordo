@@ -1,6 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useBlocker, useNavigate, useSearchParams } from 'react-router-dom'
-import { PageHeader } from '@/components/shell/page-header'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { Link, useBlocker, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -46,8 +54,37 @@ const FIELD_STEP: Record<string, number> = {
 
 const optional = (s: string) => (s.trim() === '' ? undefined : s)
 
+const Backdrop = lazy(() =>
+  import('@/features/dashboard/dashboard-page').then((m) => ({ default: m.DashboardPage })),
+)
+
+/**
+ * Creating a product opens as a drawer, like every other create and edit surface. It keeps its own address so
+ * links such as `/app/new?template=...` still work; the dashboard shows behind it, and closing returns you to
+ * wherever you came from.
+ */
 export function NewProductPage() {
   usePageTitle('New product')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const leave = () => (location.key !== 'default' ? navigate(-1) : navigate('/app'))
+  return (
+    <>
+      <Suspense fallback={null}>
+        <div aria-hidden inert>
+          <Backdrop />
+        </div>
+      </Suspense>
+      <Drawer open onOpenChange={(o) => !o && leave()}>
+        <DrawerContent size="lg" aria-describedby="new-product-description">
+          <CreateProduct onLeave={leave} />
+        </DrawerContent>
+      </Drawer>
+    </>
+  )
+}
+
+function CreateProduct({ onLeave }: { onLeave: () => void }) {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const { createProduct, createProductFromBundle } = useWorkspaceStore()
@@ -157,178 +194,182 @@ export function NewProductPage() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex max-w-2xl flex-col gap-8">
-      <PageHeader
-        title="Create a product"
-        description="Three short steps. Everything except the name is optional and can be changed later."
-      />
-
-      <nav aria-label="Setup progress">
-        <ol className="flex flex-wrap gap-1.5">
-          {STEPS.map((label, i) => (
-            <li
-              key={label}
-              aria-current={i === step ? 'step' : undefined}
-              className={cn(
-                'rounded-full px-3 py-1.5 text-body font-medium',
-                i === step
-                  ? 'bg-primary-soft font-semibold text-primary-text'
-                  : 'text-muted-foreground',
-              )}
-            >
-              <span className="tabular-nums">{i + 1}</span>
-              <span className="ml-1.5">{label}</span>
-            </li>
-          ))}
-        </ol>
-      </nav>
-
-      {formError && (
-        <Alert tone="destructive" title="Could not create the product">
-          {formError}
-        </Alert>
-      )}
-
-      {step === 0 && (
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-1 text-title font-semibold text-foreground">
-            How do you want to start?
-          </legend>
-          {[
-            {
-              id: '',
-              name: 'Start from scratch',
-              summary: 'A blank product. Add objectives, initiatives and features yourself.',
-              counts: '',
-            },
-            ...all.map((e) => ({
-              id: e.template.id,
-              name: e.template.name,
-              summary: e.template.summary,
-              counts: describeTemplate(e.template),
-              own: !e.builtIn,
-            })),
-          ].map((o) => (
-            <label
-              key={o.id || 'scratch'}
-              className={cn(
-                'flex cursor-pointer items-start gap-3 rounded-input border p-4 transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring/40',
-                values.templateId === o.id
-                  ? 'border-primary-text bg-primary-soft'
-                  : 'hover:bg-sand',
-              )}
-            >
-              <input
-                type="radio"
-                name="start"
-                className="mt-1 size-4 accent-[var(--primary-text)]"
-                checked={values.templateId === o.id}
-                onChange={() => chooseTemplate(o.id)}
-              />
-              <span className="min-w-0">
-                <span className="flex items-center gap-2 text-body font-semibold text-foreground">
-                  {o.name}
-                  {'own' in o && o.own && <Badge variant="soft">Yours</Badge>}
-                </span>
-                <span className="mt-0.5 block text-body text-muted-foreground">{o.summary}</span>
-                {o.counts && (
-                  <span className="mt-1 block text-caption text-muted-foreground tabular-nums">
-                    {o.counts}
-                  </span>
+    <form onSubmit={submit} noValidate className="flex min-h-0 flex-1 flex-col">
+      <DrawerHeader>
+        <DrawerTitle>Create a product</DrawerTitle>
+        <DrawerDescription id="new-product-description">
+          Three short steps. Everything except the name is optional and can be changed later.
+        </DrawerDescription>
+      </DrawerHeader>
+      <DrawerBody className="flex flex-col gap-8">
+        <nav aria-label="Setup progress">
+          <ol className="flex flex-wrap gap-1.5">
+            {STEPS.map((label, i) => (
+              <li
+                key={label}
+                aria-current={i === step ? 'step' : undefined}
+                className={cn(
+                  'rounded-full px-3 py-1.5 text-body font-medium',
+                  i === step
+                    ? 'bg-primary-soft font-semibold text-primary-text'
+                    : 'text-muted-foreground',
                 )}
-              </span>
-            </label>
-          ))}
-          <p className="text-caption text-muted-foreground">
-            A template is copied into your new product. The original is never changed, and nothing
-            is added to your other products.{' '}
-            {template && (
-              <Link
-                to={`/app/example?template=${template.id}`}
-                className="font-semibold text-primary-text underline underline-offset-4 hover:text-foreground"
               >
-                Preview {template.name}
-              </Link>
-            )}
-          </p>
-        </fieldset>
-      )}
+                <span className="tabular-nums">{i + 1}</span>
+                <span className="ml-1.5">{label}</span>
+              </li>
+            ))}
+          </ol>
+        </nav>
 
-      {step === 1 && (
-        <div className="flex flex-col gap-6">
-          <Field label="Product name" error={errors.name}>
-            {(c) => <Input {...c} {...bind('name')} autoFocus maxLength={200} autoComplete="off" />}
-          </Field>
-          <Field
-            label="Short description"
-            note="optional"
-            error={errors.tagline}
-            hint="One line you would say out loud."
-          >
-            {(c) => <Input {...c} {...bind('tagline')} autoComplete="off" />}
-          </Field>
-          <Field label="Product category" note="optional" error={errors.category}>
-            {(c) => (
-              <Select
-                {...c}
-                value={values.category}
-                onChange={(e) => set('category', e.target.value as ProductCategory | '')}
+        {formError && (
+          <Alert tone="destructive" title="Could not create the product">
+            {formError}
+          </Alert>
+        )}
+
+        {step === 0 && (
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-1 text-title font-semibold text-foreground">
+              How do you want to start?
+            </legend>
+            {[
+              {
+                id: '',
+                name: 'Start from scratch',
+                summary: 'A blank product. Add objectives, initiatives and features yourself.',
+                counts: '',
+              },
+              ...all.map((e) => ({
+                id: e.template.id,
+                name: e.template.name,
+                summary: e.template.summary,
+                counts: describeTemplate(e.template),
+                own: !e.builtIn,
+              })),
+            ].map((o) => (
+              <label
+                key={o.id || 'scratch'}
+                className={cn(
+                  'flex cursor-pointer items-start gap-3 rounded-input border p-4 transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring/40',
+                  values.templateId === o.id
+                    ? 'border-primary-text bg-primary-soft'
+                    : 'hover:bg-sand',
+                )}
               >
-                <option value="">Choose a category</option>
-                {PRODUCT_CATEGORIES.map((k) => (
-                  <option key={k} value={k}>
-                    {CATEGORY_LABELS[k]}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-        </div>
-      )}
+                <input
+                  type="radio"
+                  name="start"
+                  className="mt-1 size-4 accent-[var(--primary-text)]"
+                  checked={values.templateId === o.id}
+                  onChange={() => chooseTemplate(o.id)}
+                />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2 text-body font-semibold text-foreground">
+                    {o.name}
+                    {'own' in o && o.own && <Badge variant="soft">Yours</Badge>}
+                  </span>
+                  <span className="mt-0.5 block text-body text-muted-foreground">{o.summary}</span>
+                  {o.counts && (
+                    <span className="mt-1 block text-caption text-muted-foreground tabular-nums">
+                      {o.counts}
+                    </span>
+                  )}
+                </span>
+              </label>
+            ))}
+            <p className="text-caption text-muted-foreground">
+              A template is copied into your new product. The original is never changed, and nothing
+              is added to your other products.{' '}
+              {template && (
+                <Link
+                  to={`/app/example?template=${template.id}`}
+                  className="font-semibold text-primary-text underline underline-offset-4 hover:text-foreground"
+                >
+                  Preview {template.name}
+                </Link>
+              )}
+            </p>
+          </fieldset>
+        )}
 
-      {step === 2 && (
-        <div className="flex flex-col gap-6">
-          <Field
-            label="Target audience"
-            note="optional"
-            error={errors.targetAudience}
-            hint="Who is it for, and what are they trying to do?"
-          >
-            {(c) => <Textarea {...c} {...bind('targetAudience')} rows={3} autoFocus />}
-          </Field>
-          <Field
-            label="Product vision"
-            note="optional"
-            error={errors.vision}
-            hint="What is true in a few years if this works?"
-          >
-            {(c) => <Textarea {...c} {...bind('vision')} rows={3} />}
-          </Field>
-          <Field label="Planning horizon" note="optional" error={errors.planningHorizon}>
-            {(c) => (
-              <Select
-                {...c}
-                value={values.horizon}
-                onChange={(e) => set('horizon', e.target.value as PlanningHorizon | '')}
-              >
-                <option value="">Choose a horizon</option>
-                {PLANNING_HORIZONS.map((k) => (
-                  <option key={k} value={k}>
-                    {HORIZON_LABELS[k]}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-          <p className="text-caption text-muted-foreground">
-            {template ? `Starting from the ${template.name} template.` : 'Starting from scratch.'}
-          </p>
-        </div>
-      )}
+        {step === 1 && (
+          <div className="flex flex-col gap-6">
+            <Field label="Product name" error={errors.name}>
+              {(c) => (
+                <Input {...c} {...bind('name')} autoFocus maxLength={200} autoComplete="off" />
+              )}
+            </Field>
+            <Field
+              label="Short description"
+              note="optional"
+              error={errors.tagline}
+              hint="One line you would say out loud."
+            >
+              {(c) => <Input {...c} {...bind('tagline')} autoComplete="off" />}
+            </Field>
+            <Field label="Product category" note="optional" error={errors.category}>
+              {(c) => (
+                <Select
+                  {...c}
+                  value={values.category}
+                  onChange={(e) => set('category', e.target.value as ProductCategory | '')}
+                >
+                  <option value="">Choose a category</option>
+                  {PRODUCT_CATEGORIES.map((k) => (
+                    <option key={k} value={k}>
+                      {CATEGORY_LABELS[k]}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+          </div>
+        )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-6">
-        <Button asChild variant="ghost">
-          <Link to="/app">Cancel</Link>
+        {step === 2 && (
+          <div className="flex flex-col gap-6">
+            <Field
+              label="Target audience"
+              note="optional"
+              error={errors.targetAudience}
+              hint="Who is it for, and what are they trying to do?"
+            >
+              {(c) => <Textarea {...c} {...bind('targetAudience')} rows={3} autoFocus />}
+            </Field>
+            <Field
+              label="Product vision"
+              note="optional"
+              error={errors.vision}
+              hint="What is true in a few years if this works?"
+            >
+              {(c) => <Textarea {...c} {...bind('vision')} rows={3} />}
+            </Field>
+            <Field label="Planning horizon" note="optional" error={errors.planningHorizon}>
+              {(c) => (
+                <Select
+                  {...c}
+                  value={values.horizon}
+                  onChange={(e) => set('horizon', e.target.value as PlanningHorizon | '')}
+                >
+                  <option value="">Choose a horizon</option>
+                  {PLANNING_HORIZONS.map((k) => (
+                    <option key={k} value={k}>
+                      {HORIZON_LABELS[k]}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <p className="text-caption text-muted-foreground">
+              {template ? `Starting from the ${template.name} template.` : 'Starting from scratch.'}
+            </p>
+          </div>
+        )}
+      </DrawerBody>
+      <DrawerFooter className="justify-between">
+        <Button variant="ghost" onClick={onLeave} disabled={saving}>
+          Cancel
         </Button>
         <div className="flex gap-2">
           <Button
@@ -345,7 +386,7 @@ export function NewProductPage() {
             {step < STEPS.length - 1 ? 'Next' : 'Create product'}
           </Button>
         </div>
-      </div>
+      </DrawerFooter>
 
       <ConfirmDialog
         open={blocker.state === 'blocked'}

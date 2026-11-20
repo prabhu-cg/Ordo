@@ -10,6 +10,7 @@ import { usePlanningStore } from '@/store/planning-store'
 import { useTemplateStore } from '@/store/template-store'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { ProductFormDrawer } from './product-form-drawer'
+import { QuickActionsMenu } from './quick-actions-menu'
 import { SidebarContent } from './sidebar'
 import { ThemeToggle } from './theme-toggle'
 import { Wordmark } from './wordmark'
@@ -97,7 +98,8 @@ export function AppShell() {
               ) : null}
               {title && <span>{title.title}</span>}
             </p>
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-2">
+              <QuickActionsMenu />
               <ThemeToggle />
             </div>
           </header>

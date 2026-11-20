@@ -1,15 +1,4 @@
-import {
-  Archive,
-  ChevronRight,
-  DatabaseBackup,
-  Layers,
-  LayoutTemplate,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Presentation,
-  Sparkles,
-} from 'lucide-react'
+import { Archive, ChevronRight, Layers, MoreHorizontal, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import type { ShellContext } from '@/components/shell/app-shell'
@@ -144,8 +133,6 @@ function DashboardContent() {
           }
         />
       )}
-
-      <QuickActions />
     </div>
   )
 }
@@ -255,73 +242,5 @@ function ProductGrid({ products }: { products: Product[] }) {
         }}
       />
     </>
-  )
-}
-
-const ACTIONS = [
-  {
-    to: '/app/new',
-    icon: Plus,
-    title: 'Create a product',
-    body: 'Start from scratch with a name and a few details.',
-  },
-  {
-    to: '/app/new',
-    icon: LayoutTemplate,
-    title: 'Start from a template',
-    body: 'Begin with a complete starter plan you can reshape.',
-  },
-  {
-    to: '/app/example',
-    icon: Presentation,
-    title: 'Explore the example roadmap',
-    body: 'Look around a finished plan. It is read-only.',
-  },
-  {
-    to: '/app/onboarding',
-    icon: Sparkles,
-    title: 'Take the guide',
-    body: 'Five short steps on how a plan fits together.',
-  },
-  {
-    to: '/app/data',
-    icon: DatabaseBackup,
-    title: 'Back up your data',
-    body: 'Download everything as a file you can restore later.',
-  },
-]
-
-function QuickActions() {
-  return (
-    <section aria-labelledby="quick-heading" className="flex max-w-3xl flex-col gap-3">
-      <h2 id="quick-heading" className="text-xl">
-        Quick actions
-      </h2>
-      <ul className="divide-y border-y">
-        {ACTIONS.map((a) => (
-          <li key={a.title}>
-            <Link
-              to={a.to}
-              className="group flex items-center gap-4 rounded-sm px-1 py-3.5 transition-colors hover:bg-sand"
-            >
-              <span
-                className="flex size-9 shrink-0 items-center justify-center rounded-input bg-primary-soft text-primary-text"
-                aria-hidden
-              >
-                <a.icon className="size-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-body font-semibold text-foreground">{a.title}</span>
-                <span className="block text-caption text-muted-foreground">{a.body}</span>
-              </span>
-              <ChevronRight
-                className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                aria-hidden
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   )
 }

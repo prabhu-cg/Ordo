@@ -347,6 +347,52 @@
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
   }
+  /* The open list. Browsers that can style it (Chrome 135+) draw it as a menu: paper ground, strong hairline,
+     12px radius, sand on hover and amber tint on the chosen option. Others keep their own list, which takes the
+     paper ground and ink text below. */
+  select option {
+    background-color: var(--popover);
+    color: var(--foreground);
+  }
+  @supports (appearance: base-select) {
+    select,
+    ::picker(select) {
+      appearance: base-select;
+    }
+    select::picker-icon {
+      display: none;
+    }
+    select,
+    select:open {
+      background-color: var(--card);
+      color: var(--ink);
+    }
+    ::picker(select) {
+      margin-top: 0.375rem;
+      padding: 0.375rem;
+      background: var(--popover);
+      border: 1px solid var(--border-strong);
+      border-radius: 0.75rem;
+      box-shadow: var(--shadow-menu);
+    }
+    select option {
+      padding: 0.5rem 0.75rem;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+    select option::checkmark {
+      display: none;
+    }
+    select option:hover,
+    select option:focus-visible {
+      background-color: var(--secondary);
+    }
+    select option:checked {
+      background-color: var(--primary-soft);
+      color: var(--primary-text);
+      font-weight: 600;
+    }
+  }
   .dark select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8a399' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }

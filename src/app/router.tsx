@@ -155,13 +155,21 @@ export const routes: RouteObject[] = [
         lazy: page(() => import('@/features/data/data-page').then((m) => m.DataPage)),
         handle: { title: 'Data and backup' },
       },
-      {
-        path: 'design-system',
-        lazy: page(() =>
-          import('@/features/design-system/design-system-page').then((m) => m.DesignSystemPage),
-        ),
-        handle: { title: 'Design system' },
-      },
+      // The design system reference is for building Ordo, so it exists only in development. Production builds
+      // leave it out entirely, and the address shows the ordinary not-found page.
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'design-system',
+              lazy: page(() =>
+                import('@/features/design-system/design-system-page').then(
+                  (m) => m.DesignSystemPage,
+                ),
+              ),
+              handle: { title: 'Design system' },
+            },
+          ]
+        : []),
       { path: '*', element: <NotFoundPage />, handle: { title: 'Not found' } },
     ],
   },

@@ -445,7 +445,6 @@ test.describe('accessibility', () => {
         '/app/appearance',
         '/app/onboarding',
         '/app/new',
-        '/app/design-system',
       ]) {
         await page.goto(path)
         await page.waitForLoadState('networkidle')
