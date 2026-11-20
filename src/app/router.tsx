@@ -50,10 +50,6 @@ export const routes: RouteObject[] = [
         path: 'contact',
         lazy: page(() => import('@/features/marketing/info-pages').then((m) => m.ContactPage)),
       },
-      {
-        path: 'sign-in',
-        lazy: page(() => import('@/features/marketing/info-pages').then((m) => m.SignInPage)),
-      },
     ],
   },
   {

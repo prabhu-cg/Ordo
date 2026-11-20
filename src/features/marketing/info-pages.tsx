@@ -1,6 +1,5 @@
 import { analyticsConfigured } from '@/lib/analytics'
 import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
 import { usePageTitle } from './use-page-title'
 
 function InfoPage({
@@ -167,31 +166,8 @@ export function HelpPage() {
         from your latest backup file if you have one.
       </p>
       <h2 className="font-sans">Sign in</h2>
-      <p id="accounts">Accounts are not part of this version. There is nothing to sign in to.</p>
+      <p id="accounts">Accounts are not part of this version, so there is nothing to sign in to.</p>
     </InfoPage>
-  )
-}
-
-export function SignInPage() {
-  usePageTitle('Sign in')
-  return (
-    <div className="bg-surface">
-      <div className="mx-auto flex w-full max-w-xl flex-col items-start px-4 py-20 sm:px-6 sm:py-28">
-        <h1 className="text-4xl sm:text-5xl">No sign-in needed</h1>
-        <p className="mt-4 max-w-prose text-[1.0625rem] text-muted-foreground">
-          Ordo does not have accounts yet. Your work is saved in this browser, so you can start
-          right away.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild variant="primary" size="lg">
-            <Link to="/app">Open Ordo</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link to="/help">How saving works</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -239,12 +215,12 @@ export function AboutPage() {
       <p>
         Live today: <Link to="/app/new">products</Link> with objectives, measurable outcomes,
         initiatives and features; search, filters and sorting; roadmaps in three views with drag and
-        drop, dependencies, milestones and undo; templates and an example roadmap; and{' '}
-        <Link to="/app/data">backup and restore</Link>.
+        drop, dependencies, milestones and undo; templates and an example roadmap; export as image,
+        PDF, spreadsheet or backup; and <Link to="/app/data">backup and restore</Link>.
       </p>
       <p>
-        Not built yet: sharing a roadmap as an image or PDF, accounts, and syncing between devices
-        or live collaboration. If that changes, this page will say so.
+        Not built yet: accounts, and syncing between devices or live collaboration. If that changes,
+        this page will say so.
       </p>
 
       <h2 className="font-sans">Who built it, and why</h2>

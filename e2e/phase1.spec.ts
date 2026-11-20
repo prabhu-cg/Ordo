@@ -62,8 +62,7 @@ test.describe('landing page', () => {
       await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
     }
     await page.goto('/')
-    await page.getByRole('banner').getByRole('link', { name: 'Sign in' }).click()
-    await expect(page.getByRole('heading', { level: 1, name: 'No sign-in needed' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Sign in' })).toHaveCount(0)
     // No credential fields or payment controls anywhere on the public site.
     await page.goto('/')
     expect(await page.locator('input[type=password], input[type=email]').count()).toBe(0)
@@ -103,16 +102,48 @@ test.describe('landing page', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Contact' })).toBeVisible()
   })
 
-  test('FAQ opens and the product preview switches views', async ({ page }) => {
+  test('FAQ opens and the hero shows a real screen of the app', async ({ page }) => {
     await page.goto('/')
     const item = page.locator('details', { hasText: 'Where is my data stored?' })
     await item.locator('summary').click()
     await expect(item.getByText('IndexedDB')).toBeVisible()
-    const preview = page.locator('#product')
-    await preview.getByRole('tab', { name: 'Timeline' }).click()
-    await expect(preview.getByRole('region', { name: /Timeline/ })).toBeVisible()
-    await preview.getByRole('tab', { name: 'Board' }).click()
-    await expect(preview.getByRole('heading', { name: 'In progress' })).toBeVisible()
+    // The hero shows a real capture of the app in a laptop frame; only the capture for the current theme is shown.
+    const shot = page.locator('#product').getByRole('img', { name: /Ordo roadmap screen/ })
+    await expect(shot).toHaveCount(1)
+    await expect(shot).toBeVisible()
+    expect(await shot.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(
+      2880,
+    )
+  })
+
+  test('header links glide to their section, or jump when motion is reduced', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/')
+    const y = () => page.evaluate(() => Math.round(window.scrollY))
+    await page.getByRole('banner').getByRole('link', { name: 'Pricing' }).click()
+    // Mid-glide the page is somewhere between the top and the section, not at either end.
+    await expect.poll(y, { timeout: 5000 }).toBeGreaterThan(0)
+    const seen = new Set<number>()
+    for (let i = 0; i < 8; i++) {
+      seen.add(await y())
+      await page.waitForTimeout(60)
+    }
+    expect(seen.size).toBeGreaterThan(2)
+    await expect(page.locator('#pricing')).toBeInViewport()
+    // Let the glide finish before the next step.
+    let last = -1
+    await expect
+      .poll(async () => {
+        const now = await y()
+        const settled = now === last
+        last = now
+        return settled
+      })
+      .toBe(true)
+
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.getByRole('banner').getByRole('link', { name: 'Product' }).click()
+    await expect.poll(y, { timeout: 1500 }).toBeLessThan(5)
   })
 
   test('is responsive: no sideways scroll at phone width, menu works', async ({ page }) => {

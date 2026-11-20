@@ -413,7 +413,6 @@ test.describe('accessibility', () => {
     '/privacy',
     '/terms',
     '/contact',
-    '/sign-in',
     '/example',
     '/nope',
   ]

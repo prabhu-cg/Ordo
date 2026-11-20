@@ -1,5 +1,5 @@
 import { Menu } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ThemeToggle } from '@/components/shell/theme-toggle'
 import { Wordmark } from '@/components/shell/wordmark'
@@ -16,19 +16,28 @@ const NAV_LINKS = [
   { label: 'Pricing', hash: 'pricing' },
 ] as const
 
-/** Moves to a section when the address has a #hash, and to the top on any other navigation. */
+/**
+ * Moves to a section when the address has a #hash, and to the top on any other navigation. Choosing a header link
+ * while already on the page glides there; arriving from another page, or from a shared link, jumps straight to
+ * it. People who ask their system for reduced motion always get the jump.
+ */
 function ScrollToHash() {
-  const { pathname, hash } = useLocation()
+  const { pathname, hash, key } = useLocation()
+  const lastPath = useRef<string | undefined>(undefined)
   useEffect(() => {
+    const samePage = lastPath.current === pathname
+    lastPath.current = pathname
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const behavior: ScrollBehavior = samePage && !calm ? 'smooth' : 'auto'
     if (hash) {
       const el = document.getElementById(hash.slice(1))
       if (el) {
-        el.scrollIntoView()
+        el.scrollIntoView({ behavior, block: 'start' })
         return
       }
     }
-    window.scrollTo(0, 0)
-  }, [pathname, hash])
+    window.scrollTo({ top: 0, behavior })
+  }, [pathname, hash, key])
   return null
 }
 
@@ -76,9 +85,6 @@ export function MarketingLayout() {
           </nav>
           <div className="col-start-3 flex items-center justify-end gap-1.5">
             <ThemeToggle />
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link to="/sign-in">Sign in</Link>
-            </Button>
             <Button asChild variant="primary">
               <Link to={start.to}>{start.label}</Link>
             </Button>
@@ -104,13 +110,6 @@ export function MarketingLayout() {
                 {l.label}
               </Link>
             ))}
-            <Link
-              to="/sign-in"
-              onClick={() => setOpen(false)}
-              className={cn(linkClass, 'text-ink')}
-            >
-              Sign in
-            </Link>
           </nav>
         </DrawerContent>
       </Drawer>

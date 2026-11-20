@@ -1,10 +1,8 @@
 import { Check, ChevronDown } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { RoadmapLayout, RoadmapViewer } from '@/components/roadmap/roadmap-preview'
-import { Wordmark } from '@/components/shell/wordmark'
+import { RoadmapLayout } from '@/components/roadmap/roadmap-preview'
 import { Alert } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -42,12 +40,51 @@ function SectionTitle({
   )
 }
 
-function Hero() {
-  const bundle = useMemo(() => {
-    const t = getTemplate(DEFAULT_SAMPLE_TEMPLATE_ID)!
-    return resolveTemplate(t, { product: { name: t.name } })
-  }, [])
+/**
+ * A laptop drawn in CSS around two real captures of the app (light and dark, 2880 by 1800), swapped by theme.
+ * Retake `public/marketing/app-*.png` whenever the roadmap screen changes.
+ */
+function MacbookMockup() {
+  const alt =
+    'The Ordo roadmap screen in now, next and later view, with five sample items spread across three columns.'
+  return (
+    <div className="mx-auto w-full max-w-4xl">
+      <div className="device-shadow rounded-t-[18px] bg-[var(--device)] px-2 pt-2 pb-2.5 sm:rounded-t-[26px] sm:px-3.5 sm:pt-3.5 sm:pb-4">
+        <div className="relative overflow-hidden rounded-[8px] bg-background sm:rounded-[12px]">
+          <span
+            aria-hidden
+            className="absolute top-0 left-1/2 z-10 h-2 w-16 -translate-x-1/2 rounded-b-md bg-[var(--device)] sm:h-3 sm:w-24 sm:rounded-b-lg"
+          />
+          <img
+            src="/marketing/app-light.png"
+            alt={alt}
+            width={2880}
+            height={1800}
+            decoding="async"
+            className="block h-auto w-full dark:hidden"
+          />
+          <img
+            src="/marketing/app-dark.png"
+            alt={alt}
+            width={2880}
+            height={1800}
+            decoding="async"
+            className="hidden h-auto w-full dark:block"
+          />
+        </div>
+      </div>
+      {/* The aluminium deck, a little wider than the lid, with the thumb notch. */}
+      <div
+        aria-hidden
+        className="relative -mx-[3%] h-2.5 rounded-b-[14px] bg-gradient-to-b from-[#d7d4cd] to-[#b9b5ac] sm:h-3.5 dark:from-[#4a4742] dark:to-[#35322e]"
+      >
+        <span className="absolute top-0 left-1/2 h-1 w-20 -translate-x-1/2 rounded-b-md bg-black/20 sm:h-1.5 sm:w-28" />
+      </div>
+    </div>
+  )
+}
 
+function Hero() {
   return (
     <div id="product" className="scroll-mt-16">
       <section aria-labelledby="hero-title" className="bg-surface pt-16 sm:pt-24">
@@ -77,25 +114,9 @@ function Hero() {
         <div aria-hidden className="absolute inset-x-0 top-0 h-[38%] bg-surface" />
         <div className={cn(container, 'relative')}>
           <figure>
-            <div className="device-shadow rounded-[22px] bg-[var(--device)] p-2 sm:rounded-[28px] sm:p-3.5">
-              <div className="overflow-hidden rounded-[14px] bg-background sm:rounded-[16px]">
-                <div className="flex items-center justify-between gap-3 border-b bg-surface px-4 py-3 sm:px-5">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Wordmark className="[&_.font-display]:text-xl [&_svg]:size-5" />
-                    <span aria-hidden className="h-5 w-px bg-border-strong" />
-                    <span className="truncate text-body font-semibold text-foreground">
-                      {bundle.product.name}
-                    </span>
-                  </div>
-                  <Badge variant="outline">Sample</Badge>
-                </div>
-                <div className="p-4 sm:p-8">
-                  <RoadmapViewer bundle={bundle} compact />
-                </div>
-              </div>
-            </div>
+            <MacbookMockup />
             <figcaption className="mt-4 text-center text-caption text-muted-foreground">
-              Sample roadmap with example data, read-only here.{' '}
+              A real screen of Ordo with example data.{' '}
               <Link
                 to="/example"
                 className="font-semibold text-primary-text underline underline-offset-4 hover:text-foreground"
@@ -126,7 +147,7 @@ const BENEFITS = [
   {
     title: 'Share professionally',
     body: 'Keep a roadmap that is easy to explain to a client, a co-founder or an investor.',
-    note: 'Image and PDF export are not built yet. Today you can back up everything as a file.',
+    note: 'Save a roadmap as an image, print it or save it as a PDF, take the items as a spreadsheet, or back up everything as a file.',
   },
 ]
 
@@ -215,8 +236,8 @@ function Features() {
         </div>
         <Alert tone="info" title="Where Ordo is today" className="mt-14 max-w-3xl">
           You can plan objectives, initiatives and features, then build roadmaps in all three views,
-          with drag and drop and undo. Sharing a roadmap as an image or PDF is not built yet, and
-          everything stays in your own browser.
+          with drag and drop and undo. Export a roadmap as an image, PDF or spreadsheet, and back up
+          everything as a file. Everything stays in your own browser.
         </Alert>
       </div>
     </section>
@@ -367,7 +388,7 @@ const FAQ = [
   },
   {
     q: 'Do I need an account?',
-    a: 'No. There is nothing to register for, and the Sign in link only explains that. You can start in a few seconds.',
+    a: 'No. There is nothing to register for, and nothing to sign in to. You can start in a few seconds.',
   },
   {
     q: 'Is my data private?',
