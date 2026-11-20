@@ -35,3 +35,10 @@ Density sets three variables (`--card-pad`, `--card-gap`, `--row-pad`) on the ro
 A printed page is always white with dark ink, whatever the screen theme: the print page removes the dark class while it is open and puts it back on leaving. Page furniture (margin, running header, footer) is fixed in `features/export/print-model.ts`.
 
 A card is one focusable element named by exactly the words it shows (its title); its other details are ordinary text beside it. This keeps the accessible name inside what is visible ("label in name") and lets a screen reader read priority, dates and the rest.
+
+## Entry points and leaving a drawer
+
+The public header's call to action follows the visitor's own data: "Get started" (to `/app/new`) while their browser holds no products, "Open Ordo" (to `/app`) once it does. Data is per origin, so a development server and production can legitimately differ.
+
+Creating a product is a drawer over the dashboard at `/app/new`. Closing it (Cancel, Escape, the backdrop) goes back only when the previous page was inside the app; arriving from the public site, or directly, it goes to `/app` and replaces the entry, so Back never reopens the drawer. `app/navigation-history.ts` records the previous page for this.
+

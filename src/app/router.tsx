@@ -1,4 +1,5 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
+import { trackNavigation } from './navigation-history'
 import { AppShell } from '@/components/shell/app-shell'
 import { MarketingLayout } from '@/features/marketing/marketing-layout'
 import { RouteError } from '@/features/error-page'
@@ -173,3 +174,4 @@ export const routes: RouteObject[] = [
 ]
 
 export const router = createBrowserRouter(routes)
+trackNavigation(router)

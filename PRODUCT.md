@@ -26,6 +26,8 @@ Local-first and account-free: the roadmap lives in the user's browser (IndexedDB
 
 Desktop-first browser app, used in focused planning sessions. One dataset (product, objectives, initiatives, features, milestones) rendered through multiple views.
 
+A visitor on the public site sees "Get started" until their browser holds a product, then "Open Ordo". Cancelling product creation always lands them in the tool, never back on the marketing page.
+
 ## Capabilities and Constraints
 
 - Versioned data schema with migrations; soft deletion; backup and restore.

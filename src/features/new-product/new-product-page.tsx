@@ -23,6 +23,7 @@ import {
   type PlanningHorizon,
   type ProductCategory,
 } from '@/domain'
+import { previousPageIsInApp } from '@/app/navigation-history'
 import { usePageTitle } from '@/features/marketing/use-page-title'
 import { CATEGORY_LABELS, HORIZON_LABELS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
@@ -67,7 +68,8 @@ export function NewProductPage() {
   usePageTitle('New product')
   const navigate = useNavigate()
   const location = useLocation()
-  const leave = () => (location.key !== 'default' ? navigate(-1) : navigate('/app'))
+  const leave = () =>
+    location.key !== 'default' && previousPageIsInApp() ? navigate(-1) : navigate('/app', { replace: true })
   return (
     <>
       <Suspense fallback={null}>
